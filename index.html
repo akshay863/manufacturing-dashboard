@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manufacturing Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="navbar">
+    🌿 plantables.com <span>Multi-Product Manufacturing Dashboard</span>
+</header>
+
+<div class="layout">
+    <aside class="sidebar">
+        <h3>📦 Products</h3>
+        
+        <div style="font-size: 11px; margin-bottom: 10px; color: white;" id="connectionStatus">Checking connection...</div>
+
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="searchInput" placeholder="Search product name..." 
+                   onkeyup="filterProducts()" style="margin:0; padding: 8px; font-size: 13px;">
+        </div>
+
+        <div id="authSection" style="display:none; margin-bottom:15px;">
+            <button onclick="forceGoogleLogin()" style="background: #4285F4; width:100%; font-size:12px; border:none; color:white; border-radius:8px; cursor:pointer; padding:10px;">
+                🔑 Sign-in to plantables.store
+            </button>
+        </div>
+
+        <ul id="productList"></ul>
+        <button onclick="showForm()">+ Add Product</button>
+    </aside>
+
+    <main class="container">
+        <form class="card" id="productForm" style="display:none;" onsubmit="event.preventDefault(); addProduct();">
+            <h2>Add New Product</h2>
+            <input type="text" id="pName" placeholder="Product Name" required>
+            <input type="text" id="pCompany" placeholder="Company Name">
+            <input type="text" id="pCustomer" placeholder="Customer Name">
+            <input type="text" id="pOrder" placeholder="Order ID">
+            
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;"><label>Order Date</label><input type="date" id="pOrderDate"></div>
+                <div style="flex: 1;"><label>Deadline</label><input type="date" id="pDeadline"></div>
+            </div>
+
+            <input type="number" id="pQty" placeholder="Total Quantity" required>
+            <input type="file" id="pFile" accept="image/*" onchange="loadImage(event)">
+            <img id="preview" class="preview">
+
+            <button type="submit" id="saveBtn">Save Product</button>
+        </form>
+
+        <div id="dashboard" style="display:none;">
+            <div class="card">
+                <h2 id="dName"></h2>
+                <div class="info-grid">
+                    <p><b>Company:</b> <span id="dCompany"></span></p>
+                    <p><b>Customer:</b> <span id="dCustomer"></span></p>
+                    <p><b>Order ID:</b> <span id="dOrder"></span></p>
+                    <p><b>Order Date:</b> <span id="dOrderDate"></span></p>
+                    <p><b>Deadline:</b> <span id="dDeadline"></span></p>
+                    <p><b>Total Qty:</b> <span id="dQty"></span></p>
+                </div>
+                <img id="dImage" class="preview">
+            </div>
+
+            <div class="card">
+                <h2>⚙️ Process Completion</h2>
+                <div class="progress-bar" style="background: #e2e8f0; height: 30px; margin-bottom: 15px;">
+                    <div class="progress-fill" id="processFill" style="background: linear-gradient(90deg, #3182ce, #63b3ed); width: 0%;">0%</div>
+                </div>
+                <div class="add-step-tool">
+                    <input type="text" id="newStepName" placeholder="Add a specific process..." style="margin:0;">
+                    <button onclick="addNewStep()">Add Step</button>
+                </div>
+                <div class="sop-timeline" id="sopSteps"></div>
+            </div>
+
+            <div class="card">
+                <h2>📊 Production Quantity</h2>
+                <div class="stats">
+                    <div class="stat">Completed<br><span id="completed">0</span></div>
+                    <div class="stat">Remaining<br><span id="remaining">0</span></div>
+                    <div class="stat">Progress<br><span id="percent">0%</span></div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%;">0%</div>
+                </div>
+                <div class="production-input" style="margin-top: 20px; display: flex; gap: 10px;">
+                    <input type="number" id="todayQty" placeholder="Add units completed today">
+                    <button onclick="addProduction()">Update Count</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

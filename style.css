@@ -1,0 +1,178 @@
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-attachment: fixed;
+        color: #1B1B1B;
+        min-height: 100vh;
+    }
+
+    .navbar {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 20px 30px;
+        color: white;
+        font-size: 24px;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .navbar span {
+        display: block;
+        font-size: 13px;
+        font-weight: 300;
+    }
+
+    .layout {
+        display: flex;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .sidebar {
+        width: 280px;
+        background: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        padding: 25px;
+        min-height: calc(100vh - 140px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .sidebar li {
+        padding: 12px 15px;
+        background: white;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: transform 0.2s;
+    }
+
+    .sidebar li:hover {
+        transform: translateY(-2px);
+    }
+
+    .delete-icon {
+        background: #ff6b6b;
+        border: none;
+        padding: 5px 8px;
+        border-radius: 5px;
+        color: white;
+        cursor: pointer;
+    }
+
+    .container { flex: 1; max-width: 1000px; }
+
+    .card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 24px;
+        padding: 30px;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+    }
+
+    button {
+        padding: 12px 20px;
+        background: #2F7D32;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.3s;
+    }
+
+    button:hover {
+        background: #1B5E20;
+    }
+
+    .add-step-tool, .production-input {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .sop-step {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background: #f8f9fa;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        border-left: 4px solid #cbd5e0;
+    }
+
+    .sop-step.completed {
+        border-left-color: #2F7D32;
+        background: #e8f5e9;
+    }
+
+    .delete-step {
+        background: none;
+        color: #e53e3e;
+        font-size: 20px;
+        padding: 0;
+    }
+
+    .progress-bar {
+        background: #edf2f7;
+        height: 40px;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #2F7D32, #66BB6A);
+        color: white;
+        text-align: center;
+        line-height: 40px;
+        font-size: 14px;
+        transition: width 0.5s ease;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .stat {
+        background: #f1f8f4;
+        padding: 15px;
+        border-radius: 12px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .preview { width: 150px; border-radius: 10px; margin: 10px 0; border: 1px solid #ddd;}
