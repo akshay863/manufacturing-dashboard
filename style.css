@@ -1,4 +1,4 @@
-    * {
+* {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
@@ -6,29 +6,31 @@
 
     body {
         font-family: 'Poppins', sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        /* Matches the warm, paper-like background of the site */
+        background-color: #f4eee0; 
         background-attachment: fixed;
-        color: #1B1B1B;
+        color: #3d402d; /* Deep earthy green-grey for text */
         min-height: 100vh;
     }
 
     .navbar {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        /* Plantables Branding: Dark Moss Green */
+        background: #2F7D32; 
         padding: 20px 30px;
-        color: white;
+        color: #ffffff;
         font-size: 24px;
         font-weight: 600;
         position: sticky;
         top: 0;
         z-index: 100;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
     .navbar span {
         display: block;
         font-size: 13px;
         font-weight: 300;
+        color: #e8f5e9;
     }
 
     .layout {
@@ -39,33 +41,37 @@
 
     .sidebar {
         width: 280px;
-        background: rgba(255, 255, 255, 0.25);
+        /* Semi-transparent off-white */
+        background: rgba(255, 255, 255, 0.6); 
         backdrop-filter: blur(15px);
-        border-radius: 20px;
+        border-radius: 15px;
         padding: 25px;
         min-height: calc(100vh - 140px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(47, 125, 50, 0.1);
     }
 
     .sidebar li {
         padding: 12px 15px;
         background: white;
-        border-radius: 12px;
+        border-radius: 10px;
         margin-bottom: 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         cursor: pointer;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        transition: transform 0.2s;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
     }
 
     .sidebar li:hover {
-        transform: translateY(-2px);
+        transform: translateX(5px);
+        border-color: #2F7D32;
+        color: #2F7D32;
     }
 
     .delete-icon {
-        background: #ff6b6b;
+        background: #d32f2f;
         border: none;
         padding: 5px 8px;
         border-radius: 5px;
@@ -76,18 +82,12 @@
     .container { flex: 1; max-width: 1000px; }
 
     .card {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 24px;
+        background: #ffffff;
+        border-radius: 15px;
         padding: 30px;
         margin-bottom: 25px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-
-    .info-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin-bottom: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        border: 1px solid #e0e0e0;
     }
 
     input {
@@ -95,12 +95,19 @@
         padding: 12px;
         margin: 8px 0;
         border-radius: 8px;
-        border: 1px solid #ddd;
+        border: 1px solid #ced4da;
+        background: #fafafa;
+    }
+
+    input:focus {
+        outline: none;
+        border-color: #2F7D32;
+        box-shadow: 0 0 0 2px rgba(47, 125, 50, 0.1);
     }
 
     button {
         padding: 12px 20px;
-        background: #2F7D32;
+        background: #2F7D32; /* Plantables Green */
         color: white;
         border: none;
         border-radius: 8px;
@@ -110,13 +117,7 @@
     }
 
     button:hover {
-        background: #1B5E20;
-    }
-
-    .add-step-tool, .production-input {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
+        background: #1b5e20;
     }
 
     .sop-step {
@@ -124,10 +125,10 @@
         justify-content: space-between;
         align-items: center;
         padding: 12px;
-        background: #f8f9fa;
+        background: #f9fbf9;
         margin-bottom: 8px;
         border-radius: 8px;
-        border-left: 4px solid #cbd5e0;
+        border-left: 4px solid #a5d6a7;
     }
 
     .sop-step.completed {
@@ -135,44 +136,30 @@
         background: #e8f5e9;
     }
 
-    .delete-step {
-        background: none;
-        color: #e53e3e;
-        font-size: 20px;
-        padding: 0;
-    }
-
     .progress-bar {
-        background: #edf2f7;
-        height: 40px;
-        border-radius: 20px;
+        background: #eeeeee;
+        height: 30px;
+        border-radius: 15px;
         overflow: hidden;
     }
 
     .progress-fill {
         height: 100%;
         width: 0%;
-        background: linear-gradient(90deg, #2F7D32, #66BB6A);
+        background: #2F7D32;
         color: white;
         text-align: center;
-        line-height: 40px;
-        font-size: 14px;
+        line-height: 30px;
+        font-size: 13px;
         transition: width 0.5s ease;
     }
 
-    .stats {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
-        margin-bottom: 15px;
-    }
-
     .stat {
-        background: #f1f8f4;
+        background: #f1f8f4; /* Light mint tint */
         padding: 15px;
         border-radius: 12px;
         text-align: center;
         font-weight: bold;
+        color: #2F7D32;
+        border: 1px solid #e1ede5;
     }
-
-    .preview { width: 150px; border-radius: 10px; margin: 10px 0; border: 1px solid #ddd;}
