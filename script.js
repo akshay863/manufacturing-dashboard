@@ -3,6 +3,10 @@ let products = [];
 let currentProduct = null;
 let imageTemp = "";
 
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
+}
+
 function formatDate(dateStr) {
     if (!dateStr) return "N/A";
     const d = new Date(dateStr);
@@ -36,25 +40,21 @@ function getStatus(p) {
 function filterProducts() {
     const query = document.getElementById("searchInput").value.toLowerCase();
     const statusVal = document.getElementById("statusFilter").value;
-    
     const filtered = products.filter(p => {
         const nameMatch = (p.name || "").toLowerCase().includes(query);
         const companyMatch = (p.company || "").toLowerCase().includes(query);
         const statusMatch = statusVal === "all" || getStatus(p) === statusVal;
         return (nameMatch || companyMatch) && statusMatch;
     });
-    
     renderList(filtered);
 }
 
 function renderList(productsToDisplay) {
     const list = document.getElementById("productList");
     list.innerHTML = "";
-    
     productsToDisplay.forEach((p) => {
         const globalIndex = products.findIndex(item => item.id === p.id);
         const status = getStatus(p);
-        
         const li = document.createElement("li");
         li.className = `sidebar-item ${currentProduct && currentProduct.id === p.id ? 'active' : ''}`;
         li.innerHTML = `
@@ -74,7 +74,8 @@ function openProduct(index) {
     currentProduct = products[index];
     document.getElementById("productForm").style.display = "none";
     document.getElementById("dashboard").style.display = "block";
-    
+    document.getElementById("sidebar").classList.remove("open");
+
     document.getElementById("dName").innerText = currentProduct.name;
     const status = getStatus(currentProduct);
     const badge = document.getElementById("dStatusBadge");
@@ -103,10 +104,14 @@ function openProduct(index) {
 }
 
 function updateProgress() {
+    if(!currentProduct) return;
     const total = Number(currentProduct.totalQty) || 0;
     const done = Number(currentProduct.completedQty) || 0;
     const left = total - done;
-    const p = total > 0 ? Math.round((done / total) * 100) : 0;
+    
+    // Percentage logic capped at 100%
+    let p = total > 0 ? Math.round((done / total) * 100) : 0;
+    p = Math.min(p, 100); 
 
     document.getElementById("completed").innerText = done;
     document.getElementById("leftUnits").innerText = left > 0 ? left : 0;
@@ -117,14 +122,34 @@ function updateProgress() {
     fill.innerText = p + "%";
 }
 
-// FIXED: Comprehensive Save/Edit Logic
+function renderSOP() {
+    const container = document.getElementById("sopSteps");
+    container.innerHTML = "";
+    const steps = currentProduct.stepsJSON || [];
+    steps.forEach((step, i) => {
+        const div = document.createElement("div");
+        div.className = `sop-step ${step.done ? 'completed' : ''}`;
+        div.innerHTML = `
+            <span><input type="checkbox" ${step.done ? "checked" : ""} onchange="toggleStep(${i})"> ${step.name}</span>
+            <button onclick="removeStep(${i})" style="background:none; color:#ccc; border:none; cursor:pointer;">×</button>
+        `;
+        container.appendChild(div);
+    });
+    
+    // SOP Progress Logic capped at 100%
+    let p = steps.length ? Math.round((steps.filter(s => s.done).length / steps.length) * 100) : 0;
+    p = Math.min(p, 100);
+    
+    const sFill = document.getElementById("processFill");
+    sFill.style.width = p + "%";
+    sFill.innerText = p > 10 ? p + "%" : "";
+}
+
 async function saveProductAction() {
     const btn = document.getElementById("saveBtn");
     const editId = document.getElementById("editProductId").value;
-    
-    btn.innerText = "⏱ Saving to Cloud...";
+    btn.innerText = "⏱ Saving...";
     btn.disabled = true;
-    btn.style.opacity = "0.7";
 
     try {
         const payload = {
@@ -142,28 +167,12 @@ async function saveProductAction() {
             completedQty: currentProduct ? currentProduct.completedQty : 0
         };
 
-        // We use no-cors for Google Apps Script POSTs
-        await fetch(API_URL, { 
-            method: "POST", 
-            mode: "no-cors", 
-            cache: "no-cache",
-            body: JSON.stringify(payload) 
-        });
-
-        // Visual Success Feedback
-        btn.innerText = "✅ Saved Successfully!";
-        btn.style.background = "#1b5e20";
-        
-        setTimeout(() => {
-            location.reload(); 
-        }, 1200);
-
+        await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
+        btn.innerText = "✅ Saved!";
+        setTimeout(() => location.reload(), 1000);
     } catch (error) {
-        console.error("Save failed:", error);
-        btn.innerText = "❌ Error: Try Again";
-        btn.style.background = "#d32f2f";
+        btn.innerText = "❌ Error";
         btn.disabled = false;
-        btn.style.opacity = "1";
     }
 }
 
@@ -178,18 +187,12 @@ function initEditCurrent() {
     document.getElementById("pSalesperson").value = currentProduct.salesperson || "";
     document.getElementById("pDesigner").value = currentProduct.designer || "";
     document.getElementById("pQty").value = currentProduct.totalQty || 0;
-    
-    // Date formatting for input type="date"
     if(currentProduct.deadline) {
         const date = new Date(currentProduct.deadline);
         document.getElementById("pDeadline").value = date.toISOString().split('T')[0];
     }
-    
     document.getElementById("preview").src = currentProduct.imageURL || "";
-    imageTemp = ""; 
 }
-
-// ... (Rest of SOP and Production functions remain the same) ...
 
 async function addProduction() {
     const input = document.getElementById("todayQty");
@@ -207,23 +210,6 @@ async function syncToCloud() {
     }) });
 }
 
-function renderSOP() {
-    const container = document.getElementById("sopSteps");
-    container.innerHTML = "";
-    const steps = currentProduct.stepsJSON || [];
-    steps.forEach((step, i) => {
-        const div = document.createElement("div");
-        div.className = `sop-step ${step.done ? 'completed' : ''}`;
-        div.innerHTML = `
-            <span><input type="checkbox" ${step.done ? "checked" : ""} onchange="toggleStep(${i})"> ${step.name}</span>
-            <button onclick="removeStep(${i})" style="background:none; color:#ccc; border:none; cursor:pointer; font-size:18px;">×</button>
-        `;
-        container.appendChild(div);
-    });
-    const p = steps.length ? Math.round((steps.filter(s => s.done).length / steps.length) * 100) : 0;
-    document.getElementById("processFill").style.width = p + "%";
-}
-
 async function toggleStep(i) { currentProduct.stepsJSON[i].done = !currentProduct.stepsJSON[i].done; renderSOP(); await syncToCloud(); }
 async function addNewStep() { 
     const val = document.getElementById("newStepName").value;
@@ -238,21 +224,16 @@ async function removeStep(i) { currentProduct.stepsJSON.splice(i, 1); renderSOP(
 function showForm() { 
     document.getElementById("productForm").style.display = "block"; 
     document.getElementById("dashboard").style.display = "none"; 
-    document.getElementById("formTitle").innerText = "Add New Product";
-    document.getElementById("editProductId").value = "";
+    document.getElementById("sidebar").classList.remove("open");
 }
-
 function hideForm() { 
     document.getElementById("productForm").style.display = "none"; 
     if (currentProduct) document.getElementById("dashboard").style.display = "block"; 
 }
-
 function loadImage(e) {
     const reader = new FileReader();
     reader.onload = () => { imageTemp = reader.result; document.getElementById("preview").src = imageTemp; };
     reader.readAsDataURL(e.target.files[0]);
 }
-
 function exportToPDF() { window.print(); }
-
 window.onload = loadData;
