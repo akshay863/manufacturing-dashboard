@@ -15,14 +15,17 @@
             🌿 plantables.store 
             <span>Manufacturing Command Center</span>
         </div>
-        <div id="navDeadline" class="nav-deadline-box">Select a product</div>
+        <div class="nav-right">
+            <div id="navDeadline" class="nav-deadline-box">Select a product</div>
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        </div>
     </div>
 </header>
 
 <div class="layout">
-    <aside class="sidebar no-print">
+    <aside class="sidebar no-print" id="sidebar">
         <div class="sidebar-header">
-            <h3>📦PRODUCTS </h3>
+            <h3>📦 PRODUCTS</h3>
             <button onclick="showForm()" class="add-btn-small">+ New</button>
         </div>
         
@@ -43,7 +46,6 @@
 
     <main class="container">
         <div id="dashboard" style="display:none;">
-            
             <div class="product-hero printable">
                 <div class="hero-details">
                     <span id="dStatusBadge" class="badge"></span>
@@ -87,7 +89,7 @@
                                 <span id="leftUnits" class="m-val">0</span>
                             </div>
                             <div class="metric-box">
-                                <span class="m-label">Efficiency</span>
+                                <span class="m-label">percentage</span>
                                 <span id="percent" class="m-val">0%</span>
                             </div>
                         </div>
