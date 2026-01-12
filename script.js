@@ -19,7 +19,7 @@ async function loadData() {
         const response = await fetch(API_URL);
         products = await response.json();
         renderList(products);
-        if (products.length > 0) openProduct(0); else showForm();
+        if (products.length > 0) openProduct(0); else initNewProduct();
         statusText.innerText = "● System Online";
         statusText.style.color = "#2F7D32";
     } catch (e) {
@@ -141,6 +141,7 @@ function renderSOP() {
     sFill.innerText = p > 10 ? p + "%" : "";
 }
 
+// FIXED: Save Product now handles clean state for new entries
 async function saveProductAction() {
     const btn = document.getElementById("saveBtn");
     const editId = document.getElementById("editProductId").value;
@@ -152,16 +153,17 @@ async function saveProductAction() {
             action: editId ? "edit" : "add",
             id: editId,
             name: document.getElementById("pName").value,
-            company: document.getElementById("pCompany").value,
+            company: document.getElementById("pCompanyInput").value,
             customer: document.getElementById("pCustomer").value,
             salesperson: document.getElementById("pSalesperson").value,
             designer: document.getElementById("pDesigner").value,
             qty: Number(document.getElementById("pQty").value),
-            orderDate: document.getElementById("pOrderDate").value, // Added Order Date
+            orderDate: document.getElementById("pOrderDate").value,
             deadline: document.getElementById("pDeadline").value,
-            image: imageTemp || (currentProduct ? currentProduct.imageURL : ""),
-            steps: currentProduct ? currentProduct.stepsJSON : [],
-            completedQty: currentProduct ? currentProduct.completedQty : 0
+            image: imageTemp || (editId && currentProduct ? currentProduct.imageURL : ""),
+            // If new product, force empty steps and 0 progress
+            steps: editId && currentProduct ? currentProduct.stepsJSON : [],
+            completedQty: editId && currentProduct ? currentProduct.completedQty : 0
         };
 
         await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
@@ -173,19 +175,40 @@ async function saveProductAction() {
     }
 }
 
+// NEW: Function to properly reset form for new product
+function initNewProduct() {
+    currentProduct = null;
+    imageTemp = "";
+    document.getElementById("formTitle").innerText = "Add New Product";
+    document.getElementById("editProductId").value = "";
+    
+    // Clear all inputs
+    document.getElementById("pName").value = "";
+    document.getElementById("pCompanyInput").value = "";
+    document.getElementById("pCustomer").value = "";
+    document.getElementById("pSalesperson").value = "";
+    document.getElementById("pDesigner").value = "";
+    document.getElementById("pQty").value = "";
+    document.getElementById("pOrderDate").value = "";
+    document.getElementById("pDeadline").value = "";
+    document.getElementById("imageInput").value = "";
+    document.getElementById("preview").src = "";
+    
+    showForm();
+}
+
 function initEditCurrent() {
     if(!currentProduct) return;
     showForm();
     document.getElementById("formTitle").innerText = "Edit Product Details";
     document.getElementById("editProductId").value = currentProduct.id;
     document.getElementById("pName").value = currentProduct.name || "";
-    document.getElementById("pCompany").value = currentProduct.company || "";
+    document.getElementById("pCompanyInput").value = currentProduct.company || "";
     document.getElementById("pCustomer").value = currentProduct.customer || "";
     document.getElementById("pSalesperson").value = currentProduct.salesperson || "";
     document.getElementById("pDesigner").value = currentProduct.designer || "";
     document.getElementById("pQty").value = currentProduct.totalQty || 0;
     
-    // Set Order Date in Edit Form
     if(currentProduct.orderDate) {
         const oDate = new Date(currentProduct.orderDate);
         document.getElementById("pOrderDate").value = oDate.toISOString().split('T')[0];
@@ -201,7 +224,7 @@ function initEditCurrent() {
 async function addProduction() {
     const input = document.getElementById("todayQty");
     const val = Number(input.value);
-    if (val <= 0) return;
+    if (val <= 0 || !currentProduct) return;
     currentProduct.completedQty = (Number(currentProduct.completedQty) || 0) + val;
     input.value = "";
     updateProgress();
@@ -209,6 +232,7 @@ async function addProduction() {
 }
 
 async function syncToCloud() {
+    if(!currentProduct) return;
     await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ 
         action: "update", id: currentProduct.id, completedQty: currentProduct.completedQty, steps: currentProduct.stepsJSON 
     }) });
@@ -217,7 +241,7 @@ async function syncToCloud() {
 async function toggleStep(i) { currentProduct.stepsJSON[i].done = !currentProduct.stepsJSON[i].done; renderSOP(); await syncToCloud(); }
 async function addNewStep() { 
     const val = document.getElementById("newStepName").value;
-    if(!val) return;
+    if(!val || !currentProduct) return;
     if(!currentProduct.stepsJSON) currentProduct.stepsJSON = [];
     currentProduct.stepsJSON.push({name: val, done: false});
     document.getElementById("newStepName").value = "";
@@ -232,12 +256,16 @@ function showForm() {
 }
 function hideForm() { 
     document.getElementById("productForm").style.display = "none"; 
-    if (currentProduct) document.getElementById("dashboard").style.display = "block"; 
+    if (currentProduct) {
+        document.getElementById("dashboard").style.display = "block"; 
+    } else if (products.length > 0) {
+        openProduct(0);
+    }
 }
 function loadImage(e) {
     const reader = new FileReader();
     reader.onload = () => { imageTemp = reader.result; document.getElementById("preview").src = imageTemp; };
-    reader.readAsDataURL(e.target.files[0]);
+    if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
 }
 function exportToPDF() { window.print(); }
 window.onload = loadData;
