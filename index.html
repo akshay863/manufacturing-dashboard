@@ -28,7 +28,7 @@
         <aside class="sidebar no-print" id="sidebar">
             <div class="sidebar-header">
                 <h2 style="font-size: 14px;">Products</h2>
-                <button class="add-btn-small" onclick="showForm()">+ New</button>
+                <button class="add-btn-small" onclick="initNewProduct()">+ New</button>
             </div>
 
             <div class="search-filter-group">
@@ -41,8 +41,7 @@
                 </select>
             </div>
 
-            <ul class="product-menu" id="productList">
-                </ul>
+            <ul class="product-menu" id="productList"></ul>
         </aside>
 
         <main class="container">
@@ -100,8 +99,7 @@
                             <div class="progress-bar-thin">
                                 <div id="processFill" class="progress-fill" style="width: 0%; background: var(--completed);"></div>
                             </div>
-                            <div id="sopSteps">
-                                </div>
+                            <div id="sopSteps"></div>
                             <div class="add-step-tool no-print">
                                 <input type="text" id="newStepName" placeholder="Add custom step...">
                                 <button onclick="addNewStep()">Add</button>
@@ -123,7 +121,7 @@
                         </div>
                         <div class="form-group">
                             <label>Company Name</label>
-                            <input type="text" id="pCompany" placeholder="Client Company">
+                            <input type="text" id="pCompanyInput" placeholder="Client Company">
                         </div>
                         <div class="form-group">
                             <label>Customer Name</label>
@@ -151,7 +149,7 @@
                         </div>
                         <div class="form-group full">
                             <label>Product Image</label>
-                            <input type="file" accept="image/*" onchange="loadImage(event)">
+                            <input type="file" id="imageInput" accept="image/*" onchange="loadImage(event)">
                             <img id="preview" style="max-width: 100px; margin-top: 10px; border-radius: 5px;">
                         </div>
                     </div>
@@ -168,4 +166,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
