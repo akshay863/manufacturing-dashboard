@@ -86,7 +86,10 @@ function openProduct(index) {
     document.getElementById("dCustomer").innerText = currentProduct.customer || "N/A";
     document.getElementById("dSalesperson").innerText = currentProduct.salesperson || "N/A";
     document.getElementById("dDesigner").innerText = currentProduct.designer || "N/A";
+    
+    // This will now show correctly if the data is saved
     document.getElementById("dOrderDate").innerText = formatDate(currentProduct.orderDate);
+    
     document.getElementById("dDeadline").innerText = formatDate(currentProduct.deadline);
     document.getElementById("dQty").innerText = currentProduct.totalQty || 0;
     document.getElementById("dImage").src = currentProduct.imageURL || "";
@@ -109,7 +112,6 @@ function updateProgress() {
     const done = Number(currentProduct.completedQty) || 0;
     const left = total - done;
     
-    // Percentage logic capped at 100%
     let p = total > 0 ? Math.round((done / total) * 100) : 0;
     p = Math.min(p, 100); 
 
@@ -136,7 +138,6 @@ function renderSOP() {
         container.appendChild(div);
     });
     
-    // SOP Progress Logic capped at 100%
     let p = steps.length ? Math.round((steps.filter(s => s.done).length / steps.length) * 100) : 0;
     p = Math.min(p, 100);
     
@@ -161,6 +162,8 @@ async function saveProductAction() {
             salesperson: document.getElementById("pSalesperson").value,
             designer: document.getElementById("pDesigner").value,
             qty: Number(document.getElementById("pQty").value),
+            // UPDATED: Saving the Order Date
+            orderDate: document.getElementById("pOrderDate").value,
             deadline: document.getElementById("pDeadline").value,
             image: imageTemp || (currentProduct ? currentProduct.imageURL : ""),
             steps: currentProduct ? currentProduct.stepsJSON : [],
@@ -187,10 +190,25 @@ function initEditCurrent() {
     document.getElementById("pSalesperson").value = currentProduct.salesperson || "";
     document.getElementById("pDesigner").value = currentProduct.designer || "";
     document.getElementById("pQty").value = currentProduct.totalQty || 0;
+    
+    // UPDATED: Loading the Order Date
+    if(currentProduct.orderDate) {
+        const date = new Date(currentProduct.orderDate);
+        // Safely format date to YYYY-MM-DD for input
+        if(!isNaN(date.getTime())) {
+            document.getElementById("pOrderDate").value = date.toISOString().split('T')[0];
+        }
+    } else {
+         document.getElementById("pOrderDate").value = "";
+    }
+
     if(currentProduct.deadline) {
         const date = new Date(currentProduct.deadline);
-        document.getElementById("pDeadline").value = date.toISOString().split('T')[0];
+        if(!isNaN(date.getTime())) {
+            document.getElementById("pDeadline").value = date.toISOString().split('T')[0];
+        }
     }
+    
     document.getElementById("preview").src = currentProduct.imageURL || "";
 }
 
