@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manufacturing Dashboard</title>
+    <title>Plantables | Manufacturing Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
@@ -53,6 +53,7 @@
                         <p id="dCompany" style="color: var(--text-muted); font-size: 14px;"></p>
                     </div>
                     <div class="hero-actions no-print">
+                        <button class="btn-danger" onclick="deleteProductAction()">Delete Product</button>
                         <button class="btn-secondary" onclick="initEditCurrent()">Edit Details</button>
                         <button class="btn-primary" onclick="exportToPDF()">Export PDF</button>
                     </div>
