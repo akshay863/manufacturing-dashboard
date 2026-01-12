@@ -141,48 +141,81 @@ function renderSOP() {
     sFill.innerText = p > 10 ? p + "%" : "";
 }
 
-// FIXED: Save Product now handles clean state for new entries
+// FIXED: Save Product now avoids "Error" by ensuring payload is safe
 async function saveProductAction() {
     const btn = document.getElementById("saveBtn");
     const editId = document.getElementById("editProductId").value;
+    
+    if (!document.getElementById("pName").value) {
+        alert("Product Name is required!");
+        return;
+    }
+
     btn.innerText = "⏱ Saving...";
     btn.disabled = true;
 
     try {
         const payload = {
             action: editId ? "edit" : "add",
-            id: editId,
+            id: editId || null,
             name: document.getElementById("pName").value,
             company: document.getElementById("pCompanyInput").value,
             customer: document.getElementById("pCustomer").value,
             salesperson: document.getElementById("pSalesperson").value,
             designer: document.getElementById("pDesigner").value,
-            qty: Number(document.getElementById("pQty").value),
+            qty: Number(document.getElementById("pQty").value) || 0,
             orderDate: document.getElementById("pOrderDate").value,
             deadline: document.getElementById("pDeadline").value,
             image: imageTemp || (editId && currentProduct ? currentProduct.imageURL : ""),
-            // If new product, force empty steps and 0 progress
-            steps: editId && currentProduct ? currentProduct.stepsJSON : [],
-            completedQty: editId && currentProduct ? currentProduct.completedQty : 0
+            steps: (editId && currentProduct) ? currentProduct.stepsJSON : [],
+            completedQty: (editId && currentProduct) ? currentProduct.completedQty : 0
         };
 
-        await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
+        await fetch(API_URL, { 
+            method: "POST", 
+            mode: "no-cors", 
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify(payload) 
+        });
+
         btn.innerText = "✅ Saved!";
-        setTimeout(() => location.reload(), 1000);
+        setTimeout(() => location.reload(), 1500);
     } catch (error) {
-        btn.innerText = "❌ Error";
+        console.error("Save Error:", error);
+        btn.innerText = "❌ Network Error";
         btn.disabled = false;
     }
 }
 
-// NEW: Function to properly reset form for new product
+// NEW: Delete Product Action
+async function deleteProductAction() {
+    if (!currentProduct) return;
+    const confirmDelete = confirm(`Are you sure you want to delete "${currentProduct.name}"?`);
+    if (!confirmDelete) return;
+
+    const statusText = document.getElementById("connectionStatus");
+    statusText.innerText = "● Deleting...";
+
+    try {
+        await fetch(API_URL, { 
+            method: "POST", 
+            mode: "no-cors", 
+            body: JSON.stringify({ action: "delete", id: currentProduct.id }) 
+        });
+        alert("Product deleted.");
+        location.reload();
+    } catch (error) {
+        alert("Error deleting product.");
+        statusText.innerText = "● Delete Failed";
+    }
+}
+
 function initNewProduct() {
     currentProduct = null;
     imageTemp = "";
     document.getElementById("formTitle").innerText = "Add New Product";
     document.getElementById("editProductId").value = "";
     
-    // Clear all inputs
     document.getElementById("pName").value = "";
     document.getElementById("pCompanyInput").value = "";
     document.getElementById("pCustomer").value = "";
