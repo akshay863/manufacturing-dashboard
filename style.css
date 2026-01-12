@@ -101,6 +101,7 @@ button:active { transform: scale(0.96); }
 
 .btn-primary { background: var(--primary); color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; }
 .btn-secondary { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 8px 18px; border-radius: 8px; font-weight: 600; }
+.btn-danger { background: #ffebee; color: var(--urgent); border: 1px solid #ffcdd2; padding: 8px 18px; border-radius: 8px; font-weight: 600; }
 .btn-cancel { background: #f5f5f5; color: #666; padding: 10px 20px; border-radius: 8px; }
 
 .image-container img { width: 100%; border-radius: 12px; margin-top: 10px; }
