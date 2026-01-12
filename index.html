@@ -2,152 +2,169 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Manufacturing Dashboard | Plantables</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manufacturing Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<header class="navbar no-print">
-    <div class="nav-content">
-        <div class="brand">
-            🌿 plantables.store 
-            <span>Manufacturing Command Center</span>
+    <nav class="navbar no-print">
+        <div class="nav-content">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <div class="brand">
+                    PLANTABLES <span>Manufacturing Hub</span>
+                </div>
+            </div>
+            <div class="nav-right">
+                <div id="connectionStatus" style="font-size: 10px; font-weight: 600;">● Connecting...</div>
+                <div class="nav-deadline-box" id="navDeadline">No active deadline</div>
+            </div>
         </div>
-        <div class="nav-right">
-            <div id="navDeadline" class="nav-deadline-box">Select a product</div>
-            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-        </div>
+    </nav>
+
+    <div class="layout">
+        <aside class="sidebar no-print" id="sidebar">
+            <div class="sidebar-header">
+                <h2 style="font-size: 14px;">Products</h2>
+                <button class="add-btn-small" onclick="showForm()">+ New</button>
+            </div>
+
+            <div class="search-filter-group">
+                <input type="text" id="searchInput" placeholder="Search product or company..." oninput="filterProducts()">
+                <select id="statusFilter" onchange="filterProducts()">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+
+            <ul class="product-menu" id="productList">
+                </ul>
+        </aside>
+
+        <main class="container">
+            <div id="dashboard">
+                <div class="product-hero">
+                    <div class="hero-details">
+                        <span id="dStatusBadge" class="badge">Active</span>
+                        <h1 id="dName">Loading...</h1>
+                        <p id="dCompany" style="color: var(--text-muted); font-size: 14px;"></p>
+                    </div>
+                    <div class="hero-actions no-print">
+                        <button class="btn-secondary" onclick="initEditCurrent()">Edit Details</button>
+                        <button class="btn-primary" onclick="exportToPDF()">Export PDF</button>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="left-col">
+                        <div class="card">
+                            <h3>Product Information</h3>
+                            <div class="spec-list">
+                                <div class="spec-item"><span class="label">Customer</span><span class="val" id="dCustomer">-</span></div>
+                                <div class="spec-item"><span class="label">Salesperson</span><span class="val" id="dSalesperson">-</span></div>
+                                <div class="spec-item"><span class="label">Lead Designer</span><span class="val" id="dDesigner">-</span></div>
+                                <div class="spec-item"><span class="label">Order Date</span><span class="val" id="dOrderDate">-</span></div>
+                                <div class="spec-item"><span class="label">Deadline</span><span class="val" id="dDeadline" style="color: var(--urgent);">-</span></div>
+                            </div>
+                            <div class="image-container">
+                                <img id="dImage" src="" alt="Product Preview">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-col">
+                        <div class="card">
+                            <h3>Production Progress</h3>
+                            <div class="metric-row">
+                                <div class="metric-box"><span class="m-label">Total Qty</span><span class="m-val" id="dQty">0</span></div>
+                                <div class="metric-box"><span class="m-label">Completed</span><span class="m-val" id="completed">0</span></div>
+                                <div class="metric-box"><span class="m-label">Remaining</span><span class="m-val" id="leftUnits">0</span></div>
+                                <div class="metric-box"><span class="m-label">Efficiency</span><span class="m-val" id="percent">0%</span></div>
+                            </div>
+                            <div class="progress-bar">
+                                <div id="prodFill" class="progress-fill" style="width: 0%">0%</div>
+                            </div>
+                            
+                            <div class="production-input-group no-print">
+                                <input type="number" id="todayQty" placeholder="Enter units produced today...">
+                                <button onclick="addProduction()">Update</button>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3>Workflow / SOP Steps</h3>
+                            <div class="progress-bar-thin">
+                                <div id="processFill" class="progress-fill" style="width: 0%; background: var(--completed);"></div>
+                            </div>
+                            <div id="sopSteps">
+                                </div>
+                            <div class="add-step-tool no-print">
+                                <input type="text" id="newStepName" placeholder="Add custom step...">
+                                <button onclick="addNewStep()">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="productForm" style="display: none;">
+                <div class="card form-card">
+                    <h2 id="formTitle" style="margin-bottom: 20px;">Add New Product</h2>
+                    <input type="hidden" id="editProductId">
+                    
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label>Product Name</label>
+                            <input type="text" id="pName" placeholder="e.g. Eco-Friendly Packaging Box">
+                        </div>
+                        <div class="form-group">
+                            <label>Company Name</label>
+                            <input type="text" id="pCompany" placeholder="Client Company">
+                        </div>
+                        <div class="form-group">
+                            <label>Customer Name</label>
+                            <input type="text" id="pCustomer" placeholder="Contact Person">
+                        </div>
+                        <div class="form-group">
+                            <label>Salesperson</label>
+                            <input type="text" id="pSalesperson">
+                        </div>
+                        <div class="form-group">
+                            <label>Designer</label>
+                            <input type="text" id="pDesigner">
+                        </div>
+                        <div class="form-group">
+                            <label>Total Quantity</label>
+                            <input type="number" id="pQty">
+                        </div>
+                        <div class="form-group">
+                            <label>Order Date</label>
+                            <input type="date" id="pOrderDate">
+                        </div>
+                        <div class="form-group">
+                            <label>Deadline</label>
+                            <input type="date" id="pDeadline">
+                        </div>
+                        <div class="form-group full">
+                            <label>Product Image</label>
+                            <input type="file" accept="image/*" onchange="loadImage(event)">
+                            <img id="preview" style="max-width: 100px; margin-top: 10px; border-radius: 5px;">
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <button class="btn-cancel" onclick="hideForm()">Cancel</button>
+                        <button class="btn-primary" id="saveBtn" onclick="saveProductAction()">Save Product</button>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-</header>
 
-<div class="layout">
-    <aside class="sidebar no-print" id="sidebar">
-        <div class="sidebar-header">
-            <h3>📦 PRODUCTS</h3>
-            <button onclick="showForm()" class="add-btn-small">+ New</button>
-        </div>
-        
-        <div id="connectionStatus" class="connection-status">Connecting...</div>
-        
-        <div class="search-filter-group">
-            <input type="text" id="searchInput" placeholder="Search by name/client..." onkeyup="filterProducts()">
-            <select id="statusFilter" onchange="filterProducts()">
-                <option value="all">All Statuses</option>
-                <option value="urgent">🔴 Urgent</option>
-                <option value="active">🟢 Active</option>
-                <option value="completed">🔵 Completed</option>
-            </select>
-        </div>
-
-        <ul id="productList" class="product-menu"></ul>
-    </aside>
-
-    <main class="container">
-        <div id="dashboard" style="display:none;">
-            <div class="product-hero printable">
-                <div class="hero-details">
-                    <span id="dStatusBadge" class="badge"></span>
-                    <h1 id="dName">Product Name</h1>
-                    <p class="client-subtitle">Client: <span id="dCompany">Company Name</span></p>
-                </div>
-                <div class="hero-actions no-print">
-                    <button onclick="initEditCurrent()" class="btn-secondary">Edit Details</button>
-                    <button onclick="exportToPDF()" class="btn-primary">Download PDF</button>
-                </div>
-            </div>
-
-            <div class="dashboard-grid">
-                <div class="grid-col">
-                    <div class="card printable">
-                        <h3>📋 Product Specifications</h3>
-                        <div class="spec-list">
-                            <div class="spec-item"><span class="label">Customer</span><span id="dCustomer" class="val">-</span></div>
-                            <div class="spec-item"><span class="label">Salesperson</span><span id="dSalesperson" class="val">-</span></div>
-                            <div class="spec-item"><span class="label">Designer</span><span id="dDesigner" class="val">-</span></div>
-                            <div class="spec-item"><span class="label">Order Date</span><span id="dOrderDate" class="val">-</span></div>
-                            <div class="spec-item"><span class="label">Deadline</span><span id="dDeadline" class="val">-</span></div>
-                            <div class="spec-item"><span class="label">Target Qty</span><span id="dQty" class="val">0</span></div>
-                        </div>
-                        <div class="image-container">
-                            <img id="dImage" src="" alt="Product Preview">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid-col">
-                    <div class="card printable">
-                        <h3>📊 Production Metrics</h3>
-                        <div class="metric-row">
-                            <div class="metric-box">
-                                <span class="m-label">Completed</span>
-                                <span id="completed" class="m-val">0</span>
-                            </div>
-                            <div class="metric-box">
-                                <span class="m-label">Remaining</span>
-                                <span id="leftUnits" class="m-val">0</span>
-                            </div>
-                            <div class="metric-box">
-                                <span class="m-label">percentage</span>
-                                <span id="percent" class="m-val">0%</span>
-                            </div>
-                        </div>
-                        <div class="progress-container">
-                            <div class="progress-bar"><div class="progress-fill" id="prodFill">0%</div></div>
-                        </div>
-                        <div class="production-input-group no-print">
-                            <input type="number" id="todayQty" placeholder="Qty produced today...">
-                            <button onclick="addProduction()">Update</button>
-                        </div>
-                    </div>
-
-                    <div class="card printable">
-                        <h3>⚙️ Manufacturing Steps</h3>
-                        <div class="progress-bar-thin"><div class="progress-fill" id="processFill">0%</div></div>
-                        <div id="sopSteps" class="sop-list"></div>
-                        <div class="add-step-tool no-print">
-                            <input type="text" id="newStepName" placeholder="New process step...">
-                            <button onclick="addNewStep()">Add</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <form id="productForm" class="card form-card no-print" style="display:none;" onsubmit="event.preventDefault(); saveProductAction();">
-            <h2 id="formTitle">Product Configuration</h2>
-            <input type="hidden" id="editProductId">
-            
-            <div class="form-grid">
-                <div class="form-group full">
-                    <label>Product Name</label>
-                    <input type="text" id="pName" placeholder="e.g., Plantable Notebook A5" required>
-                </div>
-                <div class="form-group"><label>Company</label><input type="text" id="pCompany"></div>
-                <div class="form-group"><label>Customer</label><input type="text" id="pCustomer"></div>
-                <div class="form-group"><label>Salesperson</label><input type="text" id="pSalesperson"></div>
-                <div class="form-group"><label>Designer</label><input type="text" id="pDesigner"></div>
-                <div class="form-group"><label>Total Qty</label><input type="number" id="pQty" required></div>
-                
-                <div class="form-group"><label>Order Date</label><input type="date" id="pOrderDate"></div>
-                <div class="form-group"><label>Deadline</label><input type="date" id="pDeadline"></div>
-            </div>
-
-            <div class="form-group">
-                <label>Reference Image</label>
-                <input type="file" id="pFile" accept="image/*" onchange="loadImage(event)">
-                <img id="preview" class="form-preview">
-            </div>
-
-            <div class="form-footer">
-                <button type="button" onclick="hideForm()" class="btn-cancel">Cancel</button>
-                <button type="submit" id="saveBtn" class="btn-primary">Save Product</button>
-            </div>
-        </form>
-    </main>
-</div>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
