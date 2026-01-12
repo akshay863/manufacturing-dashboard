@@ -86,10 +86,7 @@ function openProduct(index) {
     document.getElementById("dCustomer").innerText = currentProduct.customer || "N/A";
     document.getElementById("dSalesperson").innerText = currentProduct.salesperson || "N/A";
     document.getElementById("dDesigner").innerText = currentProduct.designer || "N/A";
-    
-    // This will now show correctly if the data is saved
     document.getElementById("dOrderDate").innerText = formatDate(currentProduct.orderDate);
-    
     document.getElementById("dDeadline").innerText = formatDate(currentProduct.deadline);
     document.getElementById("dQty").innerText = currentProduct.totalQty || 0;
     document.getElementById("dImage").src = currentProduct.imageURL || "";
@@ -111,7 +108,6 @@ function updateProgress() {
     const total = Number(currentProduct.totalQty) || 0;
     const done = Number(currentProduct.completedQty) || 0;
     const left = total - done;
-    
     let p = total > 0 ? Math.round((done / total) * 100) : 0;
     p = Math.min(p, 100); 
 
@@ -140,7 +136,6 @@ function renderSOP() {
     
     let p = steps.length ? Math.round((steps.filter(s => s.done).length / steps.length) * 100) : 0;
     p = Math.min(p, 100);
-    
     const sFill = document.getElementById("processFill");
     sFill.style.width = p + "%";
     sFill.innerText = p > 10 ? p + "%" : "";
@@ -162,8 +157,7 @@ async function saveProductAction() {
             salesperson: document.getElementById("pSalesperson").value,
             designer: document.getElementById("pDesigner").value,
             qty: Number(document.getElementById("pQty").value),
-            // UPDATED: Saving the Order Date
-            orderDate: document.getElementById("pOrderDate").value,
+            orderDate: document.getElementById("pOrderDate").value, // Added Order Date
             deadline: document.getElementById("pDeadline").value,
             image: imageTemp || (currentProduct ? currentProduct.imageURL : ""),
             steps: currentProduct ? currentProduct.stepsJSON : [],
@@ -191,24 +185,16 @@ function initEditCurrent() {
     document.getElementById("pDesigner").value = currentProduct.designer || "";
     document.getElementById("pQty").value = currentProduct.totalQty || 0;
     
-    // UPDATED: Loading the Order Date
+    // Set Order Date in Edit Form
     if(currentProduct.orderDate) {
-        const date = new Date(currentProduct.orderDate);
-        // Safely format date to YYYY-MM-DD for input
-        if(!isNaN(date.getTime())) {
-            document.getElementById("pOrderDate").value = date.toISOString().split('T')[0];
-        }
-    } else {
-         document.getElementById("pOrderDate").value = "";
-    }
-
-    if(currentProduct.deadline) {
-        const date = new Date(currentProduct.deadline);
-        if(!isNaN(date.getTime())) {
-            document.getElementById("pDeadline").value = date.toISOString().split('T')[0];
-        }
+        const oDate = new Date(currentProduct.orderDate);
+        document.getElementById("pOrderDate").value = oDate.toISOString().split('T')[0];
     }
     
+    if(currentProduct.deadline) {
+        const date = new Date(currentProduct.deadline);
+        document.getElementById("pDeadline").value = date.toISOString().split('T')[0];
+    }
     document.getElementById("preview").src = currentProduct.imageURL || "";
 }
 
