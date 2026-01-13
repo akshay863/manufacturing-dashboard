@@ -126,3 +126,34 @@ button:active { transform: scale(0.96); }
     .no-print { display: none !important; }
     .card { box-shadow: none; border: 1px solid #eee; }
 }
+
+/* The Container Div */
+.eco-wrapper {
+    display: flex;
+    justify-content: center; /* Centers button horizontally */
+    padding: 20px;
+}
+
+/* The Eco Button Styling */
+.eco-btn {
+    display: inline-block;
+    text-decoration: none;
+    background-color: #4E9F3D; /* Fresh Leaf Green */
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 12px 28px;
+    border-radius: 25px; /* Soft, leaf-like rounded edges */
+    border: 2px solid #4E9F3D;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Hover Effect */
+.eco-btn:hover {
+    background-color: #191A19; /* Dark Earth/Forest tone */
+    border-color: #191A19;
+    transform: translateY(-2px); /* Slight lift effect */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
