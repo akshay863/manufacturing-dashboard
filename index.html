@@ -2,174 +2,252 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plantables | Manufacturing Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Plantables | Production App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <nav class="navbar no-print">
-        <div class="nav-content">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-                <div class="brand">
-                    PLANTABLES.store <span>Manufacturing Hub</span>
-                </div>
+    <canvas id="confetti" class="confetti-canvas"></canvas>
+
+    <nav class="app-bar no-print">
+        <div class="app-bar-left">
+            <button class="icon-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <div class="app-title">
+                PLANTABLES <span class="badge-pro">PRO</span>
             </div>
-            <div class="nav-right">
-                <div id="connectionStatus" style="font-size: 10px; font-weight: 600;">● Connecting...</div>
-                <div class="nav-deadline-box" id="navDeadline">No active deadline</div>
-            </div>
+        </div>
+        <div class="app-bar-right">
+            <div class="connection-dot" id="connectionDot"></div>
         </div>
     </nav>
 
-    <div class="layout">
-        <aside class="sidebar no-print" id="sidebar">
-            <div class="sidebar-header">
-                <h2 style="font-size: 14px;">Products</h2>
-                <button class="add-btn-small" onclick="initNewProduct()">+ New</button>
-            </div>
-
-            <div class="search-filter-group">
-                <input type="text" id="searchInput" placeholder="Search product or company..." oninput="filterProducts()">
-                <select id="statusFilter" onchange="filterProducts()">
-                    <option value="all">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="urgent">Urgent</option>
-                    <option value="completed">Completed</option>
-                </select>
-            </div>
-
-            <ul class="product-menu" id="productList"></ul>
-
-            <div class="eco-wrapper">
-        <a href="https://akshay863.github.io/plantable-sop/" class="eco-btn">
-            general SOPs 
-        </a>
+    <div class="status-ticker" id="navDeadline">
+        <i class="fas fa-clock"></i> <span>No Active Order</span>
     </div>
+
+    <div class="layout">
+        
+        <aside class="drawer no-print" id="sidebar">
+            <div class="drawer-header">
+                <h2>Production Orders</h2>
+                <button class="icon-btn" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="drawer-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search orders..." oninput="filterProducts()">
+            </div>
+
+            <div class="filter-chips">
+                <button class="chip active" onclick="setFilter('all', this)">All</button>
+                <button class="chip" onclick="setFilter('active', this)">Active</button>
+                <button class="chip" onclick="setFilter('urgent', this)">Urgent</button>
+                <button class="chip" onclick="setFilter('pending', this)">Pending</button>
+                <button class="chip" onclick="setFilter('completed', this)">Done</button>
+            </div>
+
+            <ul class="order-list" id="productList">
+                </ul>
         </aside>
 
-        <main class="container">
-            <div id="dashboard">
-                <div class="product-hero">
-                    <div class="hero-details">
-                        <span id="dStatusBadge" class="badge">Active</span>
-                        <h1 id="dName">Loading...</h1>
-                        <p id="dCompany" style="color: var(--text-muted); font-size: 14px;"></p>
-                    </div>
-                    <div class="hero-actions no-print">
-                        <button class="btn-danger" onclick="deleteProductAction()">Delete Product</button>
-                        <button class="btn-secondary" onclick="initEditCurrent()">Edit Details</button>
-                        <button class="btn-primary" onclick="exportToPDF()">Export PDF</button>
-                    </div>
-                </div>
-
-                <div class="dashboard-grid">
-                    <div class="left-col">
-                        <div class="card">
-                            <h3>Product Information</h3>
-                            <div class="spec-list">
-                                <div class="spec-item"><span class="label">Customer</span><span class="val" id="dCustomer">-</span></div>
-                                <div class="spec-item"><span class="label">Salesperson</span><span class="val" id="dSalesperson">-</span></div>
-                                <div class="spec-item"><span class="label">Lead Designer</span><span class="val" id="dDesigner">-</span></div>
-                                <div class="spec-item"><span class="label">Order Date</span><span class="val" id="dOrderDate">-</span></div>
-                                <div class="spec-item"><span class="label">Deadline</span><span class="val" id="dDeadline" style="color: var(--urgent);">-</span></div>
-                            </div>
-                            <div class="image-container">
-                                <img id="dImage" src="" alt="Product Preview">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="right-col">
-                        <div class="card">
-                            <h3>Production Progress</h3>
-                            <div class="metric-row">
-                                <div class="metric-box"><span class="m-label">Total Qty</span><span class="m-val" id="dQty">0</span></div>
-                                <div class="metric-box"><span class="m-label">Completed</span><span class="m-val" id="completed">0</span></div>
-                                <div class="metric-box"><span class="m-label">Remaining</span><span class="m-val" id="leftUnits">0</span></div>
-                                <div class="metric-box"><span class="m-label">Efficiency</span><span class="m-val" id="percent">0%</span></div>
-                            </div>
-                            <div class="progress-bar">
-                                <div id="prodFill" class="progress-fill" style="width: 0%">0%</div>
-                            </div>
-                            
-                            <div class="production-input-group no-print">
-                                <input type="number" id="todayQty" placeholder="Enter units produced today...">
-                                <button onclick="addProduction()">Update</button>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <h3>Workflow / SOP Steps</h3>
-                            <div class="progress-bar-thin">
-                                <div id="processFill" class="progress-fill" style="width: 0%; background: var(--completed);"></div>
-                            </div>
-                            <div id="sopSteps"></div>
-                            <div class="add-step-tool no-print">
-                                <input type="text" id="newStepName" placeholder="Add custom step...">
-                                <button onclick="addNewStep()">Add</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <main class="mobile-container">
+            
+            <div id="emptyState" class="empty-placeholder" style="display:none;">
+                <div class="empty-img"><i class="fas fa-clipboard-list"></i></div>
+                <h3>No Order Selected</h3>
+                <p>Open the menu to select a production order.</p>
             </div>
 
-            <div id="productForm" style="display: none;">
-                <div class="card form-card">
-                    <h2 id="formTitle" style="margin-bottom: 20px;">Add New Product</h2>
-                    <input type="hidden" id="editProductId">
+            <div id="dashboard" class="dashboard-wrapper">
+                
+                <div class="card header-card animate-fade">
+                    <div class="header-top">
+                        <span class="status-pill" id="dStatusBadge">Active</span>
+                        <button class="icon-btn-small" onclick="initEditCurrent()"><i class="fas fa-pen"></i></button>
+                    </div>
+                    <h1 id="dName">Loading Order...</h1>
+                    <div class="client-row">
+                        <i class="fas fa-building"></i> <span id="dCompany">Client Name</span>
+                    </div>
                     
-                    <div class="form-grid">
-                        <div class="form-group full">
-                            <label>Product Name</label>
-                            <input type="text" id="pName" placeholder="e.g. Eco-Friendly Packaging Box">
+                    <div class="quick-stats-grid">
+                        <div class="qs-item">
+                            <label>Customer</label>
+                            <span id="dCustomer">-</span>
                         </div>
-                        <div class="form-group">
-                            <label>Company Name</label>
-                            <input type="text" id="pCompanyInput" placeholder="Client Company">
-                        </div>
-                        <div class="form-group">
-                            <label>Customer Name</label>
-                            <input type="text" id="pCustomer" placeholder="Contact Person">
-                        </div>
-                        <div class="form-group">
-                            <label>Salesperson</label>
-                            <input type="text" id="pSalesperson">
-                        </div>
-                        <div class="form-group">
-                            <label>Designer</label>
-                            <input type="text" id="pDesigner">
-                        </div>
-                        <div class="form-group">
-                            <label>Total Quantity</label>
-                            <input type="number" id="pQty">
-                        </div>
-                        <div class="form-group">
-                            <label>Order Date</label>
-                            <input type="date" id="pOrderDate">
-                        </div>
-                        <div class="form-group">
+                        <div class="qs-item">
                             <label>Deadline</label>
-                            <input type="date" id="pDeadline">
+                            <span id="dDeadline">-</span>
                         </div>
-                        <div class="form-group full">
-                            <label>Product Image</label>
-                            <input type="file" id="imageInput" accept="image/*" onchange="loadImage(event)">
-                            <img id="preview" style="max-width: 100px; margin-top: 10px; border-radius: 5px;">
+                    </div>
+                </div>
+
+                <div class="card stats-card animate-up">
+                    <div class="card-label">PRODUCTION PROGRESS</div>
+                    
+                    <div class="progress-circle-layout">
+                        <div class="ring-container">
+                            <svg viewBox="0 0 100 100">
+                                <path d="M50,50 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0" class="ring-bg"></path>
+                                <path d="M50,50 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0" id="progressPath" class="ring-fill"></path>
+                            </svg>
+                            <div class="ring-text">
+                                <span id="percent">0%</span>
+                                <small>Efficiency</small>
+                            </div>
+                        </div>
+
+                        <div class="stat-columns">
+                            <div class="stat-col">
+                                <span class="lbl">Total</span>
+                                <span class="val" id="dQty">0</span>
+                            </div>
+                            <div class="stat-col completed-text">
+                                <span class="lbl">Done</span>
+                                <span class="val" id="completed">0</span>
+                            </div>
+                            <div class="stat-col pending-text">
+                                <span class="lbl">Remaining</span>
+                                <span class="val" id="leftUnits">0</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-footer">
-                        <button class="btn-cancel" onclick="hideForm()">Cancel</button>
-                        <button class="btn-primary" id="saveBtn" onclick="saveProductAction()">Save Product</button>
+                    <div class="production-input-row no-print">
+                        <input type="number" id="todayQty" placeholder="Enter Qty..." inputmode="numeric">
+                        <button class="btn-primary" onclick="addProduction()">Update</button>
                     </div>
                 </div>
+
+                <div class="card target-card animate-up">
+                    <div class="target-icon">
+                        <i class="fas fa-crosshairs"></i>
+                    </div>
+                    <div class="target-info">
+                        <div class="t-label" id="targetLabel">DAILY TARGET</div>
+                        <div class="t-value">
+                            <span id="dailyTargetVal">0</span> <small>units/day</small>
+                        </div>
+                        <div class="t-sub" id="daysLeftVal">0 Days Remaining</div>
+                    </div>
+                    <div class="time-progress-bar">
+                        <div id="timeBarFill"></div>
+                    </div>
+                </div>
+
+                <div class="card sop-card animate-up">
+                    <div class="card-header-row">
+                        <div class="card-label">SOP CHECKLIST</div>
+                        <span class="count-badge" id="sopCount">0/0</span>
+                    </div>
+                    
+                    <div class="sop-list" id="sopSteps">
+                        </div>
+
+                    <div class="add-step-row no-print">
+                        <input type="text" id="newStepName" placeholder="Add task...">
+                        <button onclick="addNewStep()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+
+                <div class="card image-card animate-up">
+                    <div class="card-label">REFERENCE PHOTO</div>
+                    <div class="img-wrapper">
+                        <img id="dImage" src="" onerror="this.style.display='none'">
+                        <div id="imgPlaceholder" class="placeholder-box">
+                            <i class="fas fa-image"></i>
+                            <span>No Reference Image</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="height: 80px;"></div>
+
             </div>
         </main>
+
+        <button class="fab no-print" onclick="initNewProduct()">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+    <div id="productForm" class="modal-overlay" style="display: none;">
+        <div class="modal-sheet animate-slide-up-modal">
+            <div class="modal-header">
+                <h2>Edit Order</h2>
+                <button class="text-btn" onclick="hideForm()">Done</button>
+            </div>
+            
+            <div class="modal-scroll">
+                <input type="hidden" id="editProductId">
+                
+                <div class="form-group">
+                    <label>Product Name</label>
+                    <input type="text" id="pName" placeholder="Product Name">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Client</label>
+                        <input type="text" id="pCompanyInput">
+                    </div>
+                    <div class="form-group">
+                        <label>Customer</label>
+                        <input type="text" id="pCustomer">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Salesperson</label>
+                        <input type="text" id="pSalesperson">
+                    </div>
+                    <div class="form-group">
+                        <label>Designer</label>
+                        <input type="text" id="pDesigner">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Total Quantity</label>
+                    <input type="number" id="pQty" inputmode="numeric">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Order Date</label>
+                        <input type="date" id="pOrderDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Deadline</label>
+                        <input type="date" id="pDeadline">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Reference Photo</label>
+                    <div class="file-btn-wrapper">
+                        <button class="btn-outline" onclick="document.getElementById('imageInput').click()">
+                            <i class="fas fa-camera"></i> Upload Photo
+                        </button>
+                        <input type="file" id="imageInput" accept="image/*" onchange="loadImage(event)" style="display:none;">
+                    </div>
+                    <img id="preview" class="preview-thumb" style="display:none;">
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn-danger-outline" onclick="deleteProductAction()">Delete Order</button>
+                    <button class="btn-primary-full" id="saveBtn" onclick="saveProductAction()">Save Changes</button>
+                </div>
+                <div style="height: 40px;"></div>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </body>
 </html>
