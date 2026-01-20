@@ -1,70 +1,75 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbwaKu6Vq-K_tQ0mayBU44w0LK36OCiDcFa87HIADiHiqz1r2BkOpCbmHU36760H1r89/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwaKu6Vq-K_tQ0mayBU44w0LK36OCiDcFa87HIADiHiqz1r2BkOpCbmHU36760H1r89/exec"; 
 let products = [];
 let currentProduct = null;
+let currentFilter = "all";
 let imageTemp = "";
+
+window.onload = loadData;
 
 function toggleSidebar() {
     document.getElementById("sidebar").classList.toggle("open");
 }
 
-function formatDate(dateStr) {
-    if (!dateStr) return "N/A";
-    const d = new Date(dateStr);
-    return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString('en-GB');
-}
-
-async function loadData() {
-    const statusText = document.getElementById("connectionStatus");
-    try {
-        const response = await fetch(API_URL);
-        products = await response.json();
-        renderList(products);
-        if (products.length > 0) openProduct(0); else initNewProduct();
-        statusText.innerText = "● System Online";
-        statusText.style.color = "#2F7D32";
-    } catch (e) {
-        statusText.innerText = "● System Offline";
-        statusText.style.color = "#d32f2f";
-    }
-}
-
 function getStatus(p) {
     const total = Number(p.totalQty) || 0;
     const done = Number(p.completedQty) || 0;
-    if (done >= total && total > 0) return 'completed';
+    if (total > 0 && done >= total) return 'completed';
     if (!p.deadline) return 'active';
-    const diff = (new Date(p.deadline) - new Date()) / (86400000);
-    return diff < 3 ? 'urgent' : 'active';
+    
+    // Date Logic
+    const now = new Date(); now.setHours(0,0,0,0);
+    const dLine = new Date(p.deadline); dLine.setHours(0,0,0,0);
+    const diff = (dLine - now) / (1000 * 60 * 60 * 24);
+    
+    if (diff < 0) return 'pending'; // Overdue
+    if (diff <= 3) return 'urgent'; // < 3 Days
+    return 'active';
 }
 
-function filterProducts() {
+function getStatusColor(status) {
+    if(status==='completed') return '#1976D2'; // Blue
+    if(status==='urgent') return '#F57C00'; // Orange
+    if(status==='pending') return '#D32F2F'; // Red
+    return '#2F7D32'; // Green
+}
+
+async function loadData() {
+    try {
+        const res = await fetch(API_URL);
+        products = await res.json();
+        renderList();
+        if (products.length > 0) openProduct(0); 
+        else document.getElementById("emptyState").style.display = "block";
+    } catch (e) {
+        document.getElementById("navDeadline").innerHTML = "<span>Offline mode</span>";
+    }
+}
+
+function renderList() {
     const query = document.getElementById("searchInput").value.toLowerCase();
-    const statusVal = document.getElementById("statusFilter").value;
-    const filtered = products.filter(p => {
-        const nameMatch = (p.name || "").toLowerCase().includes(query);
-        const companyMatch = (p.company || "").toLowerCase().includes(query);
-        const statusMatch = statusVal === "all" || getStatus(p) === statusVal;
-        return (nameMatch || companyMatch) && statusMatch;
-    });
-    renderList(filtered);
-}
-
-function renderList(productsToDisplay) {
     const list = document.getElementById("productList");
     list.innerHTML = "";
-    productsToDisplay.forEach((p) => {
-        const globalIndex = products.findIndex(item => item.id === p.id);
+
+    const filtered = products.filter(p => {
+        const matchesName = (p.name || "").toLowerCase().includes(query);
+        const matchesFilter = currentFilter === "all" || getStatus(p) === currentFilter;
+        return matchesName && matchesFilter;
+    });
+
+    filtered.forEach((p) => {
+        const index = products.findIndex(x => x.id === p.id);
         const status = getStatus(p);
+        const color = getStatusColor(status);
+        
         const li = document.createElement("li");
-        li.className = `sidebar-item ${currentProduct && currentProduct.id === p.id ? 'active' : ''}`;
+        li.className = "order-item";
+        li.onclick = () => { openProduct(index); toggleSidebar(); };
         li.innerHTML = `
-            <div onclick="openProduct(${globalIndex})">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-weight:600; font-size:13px;">${p.name || 'Untitled'}</span>
-                    <span class="badge badge-${status}" style="width:8px; height:8px; border-radius:50%; padding:0;"></span>
-                </div>
-                <div style="font-size:11px; color:#666; margin-top:2px;">${p.company || 'Direct Client'}</div>
+            <div class="o-info">
+                <h4>${p.name}</h4>
+                <p>${p.company || 'Client'}</p>
             </div>
+            <div class="status-dot" style="background:${color}"></div>
         `;
         list.appendChild(li);
     });
@@ -72,233 +77,195 @@ function renderList(productsToDisplay) {
 
 function openProduct(index) {
     currentProduct = products[index];
-    document.getElementById("productForm").style.display = "none";
     document.getElementById("dashboard").style.display = "block";
-    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("emptyState").style.display = "none";
 
+    // Text Data
     document.getElementById("dName").innerText = currentProduct.name;
+    document.getElementById("dCompany").innerText = currentProduct.company || "Direct Client";
+    document.getElementById("dCustomer").innerText = currentProduct.customer || "-";
+    document.getElementById("dDeadline").innerText = currentProduct.deadline ? new Date(currentProduct.deadline).toLocaleDateString() : "No Date";
+    
+    // Status Badge
     const status = getStatus(currentProduct);
     const badge = document.getElementById("dStatusBadge");
-    badge.className = `badge badge-${status}`;
-    badge.innerText = status;
+    badge.innerText = status === 'pending' ? 'OVERDUE' : status.toUpperCase();
+    badge.style.color = getStatusColor(status);
+    badge.style.backgroundColor = getStatusColor(status) + '20'; // 20% opacity
 
-    document.getElementById("dCompany").innerText = currentProduct.company || "Direct Client";
-    document.getElementById("dCustomer").innerText = currentProduct.customer || "N/A";
-    document.getElementById("dSalesperson").innerText = currentProduct.salesperson || "N/A";
-    document.getElementById("dDesigner").innerText = currentProduct.designer || "N/A";
-    document.getElementById("dOrderDate").innerText = formatDate(currentProduct.orderDate);
-    document.getElementById("dDeadline").innerText = formatDate(currentProduct.deadline);
-    document.getElementById("dQty").innerText = currentProduct.totalQty || 0;
-    document.getElementById("dImage").src = currentProduct.imageURL || "";
-
-    const navD = document.getElementById("navDeadline");
-    if (currentProduct.deadline) {
-        const days = Math.ceil((new Date(currentProduct.deadline) - new Date()) / (86400000));
-        navD.innerText = days < 0 ? `Late by ${Math.abs(days)}d` : `${days} days left`;
-        navD.style.background = days < 3 ? "#d32f2f" : "rgba(255,255,255,0.15)";
+    // Ticker Update
+    const tick = document.getElementById("navDeadline");
+    if(status === 'urgent') {
+        tick.style.background = "#F57C00";
+        tick.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span>High Priority Order</span>`;
+    } else if (status === 'pending') {
+        tick.style.background = "#D32F2F";
+        tick.innerHTML = `<i class="fas fa-exclamation-triangle"></i> <span>Order Overdue</span>`;
+    } else {
+        tick.style.background = "#263238";
+        tick.innerHTML = `<i class="fas fa-check-circle"></i> <span>Production Normal</span>`;
     }
 
+    // Image
+    const img = document.getElementById("dImage");
+    const ph = document.getElementById("imgPlaceholder");
+    if(currentProduct.imageURL) { img.src = currentProduct.imageURL; img.style.display="block"; ph.style.display="none"; }
+    else { img.style.display="none"; ph.style.display="block"; }
+
+    updateStats(status);
     renderSOP();
-    updateProgress();
-    renderList(products);
 }
 
-function updateProgress() {
-    if(!currentProduct) return;
+function updateStats(status) {
     const total = Number(currentProduct.totalQty) || 0;
     const done = Number(currentProduct.completedQty) || 0;
-    const left = total - done;
-    let p = total > 0 ? Math.round((done / total) * 100) : 0;
-    p = Math.min(p, 100); 
+    const left = Math.max(0, total - done);
+    const pct = total > 0 ? Math.round((done/total)*100) : 0;
 
+    if(pct === 100 && status !== 'completed') {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    }
+
+    document.getElementById("dQty").innerText = total;
     document.getElementById("completed").innerText = done;
-    document.getElementById("leftUnits").innerText = left > 0 ? left : 0;
-    document.getElementById("percent").innerText = p + "%";
+    document.getElementById("leftUnits").innerText = left;
+    document.getElementById("percent").innerText = pct + "%";
+
+    // SVG Ring
+    const circle = document.getElementById('progressPath');
+    const offset = 283 - (pct / 100) * 283;
+    circle.style.strokeDashoffset = offset;
+    circle.style.stroke = getStatusColor(status);
+
+    // Target Logic
+    const tCard = document.querySelector('.target-card');
+    const tLabel = document.getElementById("targetLabel");
+    const tVal = document.getElementById("dailyTargetVal");
+    const tDays = document.getElementById("daysLeftVal");
     
-    const fill = document.getElementById("prodFill");
-    fill.style.width = p + "%";
-    fill.innerText = p + "%";
+    tCard.style.background = getStatusColor(status);
+    
+    if (status === 'completed') {
+        tLabel.innerText = "ORDER STATUS";
+        tVal.innerHTML = "DONE";
+        tDays.innerText = "Production Complete";
+    } else if (status === 'pending') {
+        tLabel.innerText = "BACKLOG";
+        tVal.innerHTML = left;
+        tDays.innerText = "Schedule Overrun";
+    } else {
+        const now = new Date();
+        const dLine = new Date(currentProduct.deadline);
+        const days = Math.ceil((dLine - now)/(86400000));
+        
+        if (days > 0) {
+            tLabel.innerText = "DAILY TARGET";
+            tVal.innerHTML = Math.ceil(left/days);
+            tDays.innerText = `${days} Days Remaining`;
+        } else {
+            tLabel.innerText = "DUE TODAY";
+            tVal.innerHTML = left;
+            tDays.innerText = "Final Day";
+        }
+    }
 }
 
 function renderSOP() {
-    const container = document.getElementById("sopSteps");
-    container.innerHTML = "";
+    const list = document.getElementById("sopSteps");
+    list.innerHTML = "";
     const steps = currentProduct.stepsJSON || [];
+    document.getElementById("sopCount").innerText = `${steps.filter(s=>s.done).length}/${steps.length}`;
+
     steps.forEach((step, i) => {
         const div = document.createElement("div");
-        div.className = `sop-step ${step.done ? 'completed' : ''}`;
+        div.className = `sop-item ${step.done ? 'done' : ''}`;
         div.innerHTML = `
-            <span><input type="checkbox" ${step.done ? "checked" : ""} onchange="toggleStep(${i})"> ${step.name}</span>
-            <button onclick="removeStep(${i})" style="background:none; color:#ccc; border:none; cursor:pointer;">×</button>
+            <div class="sop-left">
+                <input type="checkbox" ${step.done ? "checked" : ""} onchange="toggleStep(${i})">
+                <span>${step.name}</span>
+            </div>
+            <i class="fas fa-trash" style="color:#BDBDBD" onclick="removeStep(${i})"></i>
         `;
-        container.appendChild(div);
+        list.appendChild(div);
     });
-    
-    let p = steps.length ? Math.round((steps.filter(s => s.done).length / steps.length) * 100) : 0;
-    p = Math.min(p, 100);
-    const sFill = document.getElementById("processFill");
-    sFill.style.width = p + "%";
-    sFill.innerText = p > 10 ? p + "%" : "";
 }
 
-// FIXED: Save Product now avoids "Error" by ensuring payload is safe
+// Actions
 async function saveProductAction() {
     const btn = document.getElementById("saveBtn");
-    const editId = document.getElementById("editProductId").value;
+    btn.innerText = "Saving...";
+    const id = document.getElementById("editProductId").value;
     
-    if (!document.getElementById("pName").value) {
-        alert("Product Name is required!");
-        return;
-    }
+    const payload = {
+        action: id ? "edit" : "add",
+        id: id || null,
+        name: document.getElementById("pName").value,
+        company: document.getElementById("pCompanyInput").value,
+        customer: document.getElementById("pCustomer").value,
+        salesperson: document.getElementById("pSalesperson").value,
+        designer: document.getElementById("pDesigner").value,
+        qty: Number(document.getElementById("pQty").value) || 0,
+        orderDate: document.getElementById("pOrderDate").value,
+        deadline: document.getElementById("pDeadline").value,
+        image: imageTemp || (id && currentProduct ? currentProduct.imageURL : ""),
+        steps: (id && currentProduct) ? currentProduct.stepsJSON : [],
+        completedQty: (id && currentProduct) ? currentProduct.completedQty : 0
+    };
 
-    btn.innerText = "⏱ Saving...";
-    btn.disabled = true;
-
-    try {
-        const payload = {
-            action: editId ? "edit" : "add",
-            id: editId || null,
-            name: document.getElementById("pName").value,
-            company: document.getElementById("pCompanyInput").value,
-            customer: document.getElementById("pCustomer").value,
-            salesperson: document.getElementById("pSalesperson").value,
-            designer: document.getElementById("pDesigner").value,
-            qty: Number(document.getElementById("pQty").value) || 0,
-            orderDate: document.getElementById("pOrderDate").value,
-            deadline: document.getElementById("pDeadline").value,
-            image: imageTemp || (editId && currentProduct ? currentProduct.imageURL : ""),
-            steps: (editId && currentProduct) ? currentProduct.stepsJSON : [],
-            completedQty: (editId && currentProduct) ? currentProduct.completedQty : 0
-        };
-
-        await fetch(API_URL, { 
-            method: "POST", 
-            mode: "no-cors", 
-            headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify(payload) 
-        });
-
-        btn.innerText = "✅ Saved!";
-        setTimeout(() => location.reload(), 1500);
-    } catch (error) {
-        console.error("Save Error:", error);
-        btn.innerText = "❌ Network Error";
-        btn.disabled = false;
-    }
-}
-
-// NEW: Delete Product Action
-async function deleteProductAction() {
-    if (!currentProduct) return;
-    const confirmDelete = confirm(`Are you sure you want to delete "${currentProduct.name}"?`);
-    if (!confirmDelete) return;
-
-    const statusText = document.getElementById("connectionStatus");
-    statusText.innerText = "● Deleting...";
-
-    try {
-        await fetch(API_URL, { 
-            method: "POST", 
-            mode: "no-cors", 
-            body: JSON.stringify({ action: "delete", id: currentProduct.id }) 
-        });
-        alert("Product deleted.");
-        location.reload();
-    } catch (error) {
-        alert("Error deleting product.");
-        statusText.innerText = "● Delete Failed";
-    }
-}
-
-function initNewProduct() {
-    currentProduct = null;
-    imageTemp = "";
-    document.getElementById("formTitle").innerText = "Add New Product";
-    document.getElementById("editProductId").value = "";
-    
-    document.getElementById("pName").value = "";
-    document.getElementById("pCompanyInput").value = "";
-    document.getElementById("pCustomer").value = "";
-    document.getElementById("pSalesperson").value = "";
-    document.getElementById("pDesigner").value = "";
-    document.getElementById("pQty").value = "";
-    document.getElementById("pOrderDate").value = "";
-    document.getElementById("pDeadline").value = "";
-    document.getElementById("imageInput").value = "";
-    document.getElementById("preview").src = "";
-    
-    showForm();
-}
-
-function initEditCurrent() {
-    if(!currentProduct) return;
-    showForm();
-    document.getElementById("formTitle").innerText = "Edit Product Details";
-    document.getElementById("editProductId").value = currentProduct.id;
-    document.getElementById("pName").value = currentProduct.name || "";
-    document.getElementById("pCompanyInput").value = currentProduct.company || "";
-    document.getElementById("pCustomer").value = currentProduct.customer || "";
-    document.getElementById("pSalesperson").value = currentProduct.salesperson || "";
-    document.getElementById("pDesigner").value = currentProduct.designer || "";
-    document.getElementById("pQty").value = currentProduct.totalQty || 0;
-    
-    if(currentProduct.orderDate) {
-        const oDate = new Date(currentProduct.orderDate);
-        document.getElementById("pOrderDate").value = oDate.toISOString().split('T')[0];
-    }
-    
-    if(currentProduct.deadline) {
-        const date = new Date(currentProduct.deadline);
-        document.getElementById("pDeadline").value = date.toISOString().split('T')[0];
-    }
-    document.getElementById("preview").src = currentProduct.imageURL || "";
+    await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
+    setTimeout(() => location.reload(), 1500);
 }
 
 async function addProduction() {
-    const input = document.getElementById("todayQty");
-    const val = Number(input.value);
-    if (val <= 0 || !currentProduct) return;
-    currentProduct.completedQty = (Number(currentProduct.completedQty) || 0) + val;
-    input.value = "";
-    updateProgress();
-    await syncToCloud();
+    const val = Number(document.getElementById("todayQty").value);
+    if(val <= 0 || !currentProduct) return;
+    currentProduct.completedQty = (Number(currentProduct.completedQty)||0) + val;
+    document.getElementById("todayQty").value = "";
+    updateStats(getStatus(currentProduct));
+    await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({
+        action: "update", id: currentProduct.id, completedQty: currentProduct.completedQty, steps: currentProduct.stepsJSON
+    })});
 }
 
-async function syncToCloud() {
-    if(!currentProduct) return;
-    await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ 
-        action: "update", id: currentProduct.id, completedQty: currentProduct.completedQty, steps: currentProduct.stepsJSON 
-    }) });
+async function toggleStep(i) {
+    currentProduct.stepsJSON[i].done = !currentProduct.stepsJSON[i].done;
+    renderSOP();
+    await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({
+        action: "update", id: currentProduct.id, completedQty: currentProduct.completedQty, steps: currentProduct.stepsJSON
+    })});
 }
 
-async function toggleStep(i) { currentProduct.stepsJSON[i].done = !currentProduct.stepsJSON[i].done; renderSOP(); await syncToCloud(); }
-async function addNewStep() { 
+async function addNewStep() {
     const val = document.getElementById("newStepName").value;
-    if(!val || !currentProduct) return;
+    if(!val) return;
     if(!currentProduct.stepsJSON) currentProduct.stepsJSON = [];
     currentProduct.stepsJSON.push({name: val, done: false});
     document.getElementById("newStepName").value = "";
-    renderSOP(); await syncToCloud();
+    renderSOP();
+    await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({
+        action: "update", id: currentProduct.id, completedQty: currentProduct.completedQty, steps: currentProduct.stepsJSON
+    })});
 }
-async function removeStep(i) { currentProduct.stepsJSON.splice(i, 1); renderSOP(); await syncToCloud(); }
 
-function showForm() { 
-    document.getElementById("productForm").style.display = "block"; 
-    document.getElementById("dashboard").style.display = "none"; 
-    document.getElementById("sidebar").classList.remove("open");
+async function removeStep(i) {
+    currentProduct.stepsJSON.splice(i, 1);
+    renderSOP();
+    await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({
+        action: "update", id: currentProduct.id, completedQty: currentProduct.completedQty, steps: currentProduct.stepsJSON
+    })});
 }
-function hideForm() { 
-    document.getElementById("productForm").style.display = "none"; 
-    if (currentProduct) {
-        document.getElementById("dashboard").style.display = "block"; 
-    } else if (products.length > 0) {
-        openProduct(0);
+
+async function deleteProductAction() {
+    if(confirm("Delete this order?")) {
+        fetch(API_URL, {method:"POST", mode:"no-cors", body:JSON.stringify({action:"delete", id:currentProduct.id})});
+        location.reload();
     }
 }
-function loadImage(e) {
-    const reader = new FileReader();
-    reader.onload = () => { imageTemp = reader.result; document.getElementById("preview").src = imageTemp; };
-    if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
-}
-function exportToPDF() { window.print(); }
-window.onload = loadData;
+
+// Helper
+function setFilter(f, btn) { currentFilter = f; document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')); btn.classList.add('active'); renderList(); }
+function showForm() { document.getElementById("productForm").style.display = "flex"; }
+function hideForm() { document.getElementById("productForm").style.display = "none"; }
+function loadImage(e) { const r = new FileReader(); r.onload=()=>{imageTemp=r.result; document.getElementById("preview").src=imageTemp; document.getElementById("preview").style.display="block";}; if(e.target.files[0]) r.readAsDataURL(e.target.files[0]); }
+function initNewProduct() { currentProduct=null; imageTemp=""; document.querySelectorAll("input").forEach(i=>i.value=""); document.getElementById("preview").style.display="none"; showForm(); }
+function initEditCurrent() { if(!currentProduct) return; showForm(); document.getElementById("editProductId").value=currentProduct.id; document.getElementById("pName").value=currentProduct.name; document.getElementById("pCompanyInput").value=currentProduct.company; document.getElementById("pCustomer").value=currentProduct.customer; document.getElementById("pSalesperson").value=currentProduct.salesperson; document.getElementById("pDesigner").value=currentProduct.designer; document.getElementById("pQty").value=currentProduct.totalQty; if(currentProduct.orderDate) document.getElementById("pOrderDate").value=new Date(currentProduct.orderDate).toISOString().split('T')[0]; if(currentProduct.deadline) document.getElementById("pDeadline").value=new Date(currentProduct.deadline).toISOString().split('T')[0]; if(currentProduct.imageURL) { document.getElementById("preview").src=currentProduct.imageURL; document.getElementById("preview").style.display="block"; } }
