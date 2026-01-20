@@ -3,246 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Plantables | Production App</title>
+    <title>Plantables | Production Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
     <canvas id="confetti" class="confetti-canvas"></canvas>
 
-    <nav class="app-bar no-print">
-        <div class="app-bar-left">
-            <button class="icon-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-            <div class="app-title">
-                PLANTABLES <span class="badge-pro">PRO</span>
-            </div>
+    <nav class="top-bar no-print">
+        <div class="tb-left">
+            <button class="nav-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <div class="brand">PLANTABLES <span class="tag">PRO</span></div>
         </div>
-        <div class="app-bar-right">
-            <div class="connection-dot" id="connectionDot"></div>
+        <div class="tb-right">
+            <div class="conn-dot" id="connectionDot" title="System Online"></div>
         </div>
     </nav>
 
-    <div class="status-ticker" id="navDeadline">
-        <i class="fas fa-clock"></i> <span>No Active Order</span>
-    </div>
-
-    <div class="layout">
+    <div class="app-layout">
         
-        <aside class="drawer no-print" id="sidebar">
-            <div class="drawer-header">
-                <h2>Production Orders</h2>
-                <button class="icon-btn" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+        <aside class="sidebar no-print" id="sidebar">
+            <div class="sb-header">
+                <h2>Production Queue</h2>
+                <button class="nav-btn" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
             </div>
-
-            <div class="drawer-search">
+            <div class="sb-search">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Search orders..." oninput="filterProducts()">
+                <input type="text" id="searchInput" placeholder="Search..." oninput="filterProducts()">
             </div>
-
-            <div class="filter-chips">
+            <div class="sb-filters">
                 <button class="chip active" onclick="setFilter('all', this)">All</button>
                 <button class="chip" onclick="setFilter('active', this)">Active</button>
                 <button class="chip" onclick="setFilter('urgent', this)">Urgent</button>
                 <button class="chip" onclick="setFilter('pending', this)">Pending</button>
                 <button class="chip" onclick="setFilter('completed', this)">Done</button>
             </div>
-
-            <ul class="order-list" id="productList">
-                </ul>
+            <ul class="order-list" id="productList"></ul>
         </aside>
 
-        <main class="mobile-container">
+        <main class="workspace">
             
-            <div id="emptyState" class="empty-placeholder" style="display:none;">
-                <div class="empty-img"><i class="fas fa-clipboard-list"></i></div>
-                <h3>No Order Selected</h3>
-                <p>Open the menu to select a production order.</p>
+            <div id="emptyState" class="empty-screen" style="display:none;">
+                <div class="empty-anim"><i class="fas fa-cube"></i></div>
+                <h3>Ready for Production</h3>
+                <p>Select an order from the menu.</p>
             </div>
 
-            <div id="dashboard" class="dashboard-wrapper">
+            <div id="dashboard" class="dashboard-grid">
                 
-                <div class="card header-card animate-fade">
-                    <div class="header-top">
+                <div class="card card-hero animate-fade">
+                    <div class="hero-flex">
                         <span class="status-pill" id="dStatusBadge">Active</span>
-                        <button class="icon-btn-small" onclick="initEditCurrent()"><i class="fas fa-pen"></i></button>
-                    </div>
-                    <h1 id="dName">Loading Order...</h1>
-                    <div class="client-row">
-                        <i class="fas fa-building"></i> <span id="dCompany">Client Name</span>
+                        <div class="client-name"><i class="fas fa-building"></i> <span id="dCompany">-</span></div>
                     </div>
                     
-                    <div class="quick-stats-grid">
-                        <div class="qs-item">
-                            <label>Customer</label>
-                            <span id="dCustomer">-</span>
+                    <div class="hero-title-row">
+                        <h1 id="dName">Loading...</h1>
+                        <button class="icon-circle" onclick="initEditCurrent()"><i class="fas fa-pen"></i></button>
+                    </div>
+
+                    <div class="hero-dense-grid">
+                        <div class="hd-item">
+                            <label>Customer</label> <span id="dCustomer">-</span>
                         </div>
-                        <div class="qs-item">
-                            <label>Deadline</label>
-                            <span id="dDeadline">-</span>
+                        <div class="hd-item">
+                            <label>Sales</label> <span id="dSalesperson">-</span>
+                        </div>
+                        <div class="hd-item">
+                            <label>Order Date</label> <span id="dOrderDate">-</span>
+                        </div>
+                        <div class="hd-item">
+                            <label>Deadline</label> <span id="dDeadline">-</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="card stats-card animate-up">
-                    <div class="card-label">PRODUCTION PROGRESS</div>
-                    
-                    <div class="progress-circle-layout">
-                        <div class="ring-container">
+                <div class="card card-stats animate-up">
+                    <div class="stats-split">
+                        <div class="ring-box">
                             <svg viewBox="0 0 100 100">
-                                <path d="M50,50 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0" class="ring-bg"></path>
-                                <path d="M50,50 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0" id="progressPath" class="ring-fill"></path>
+                                <path d="M50,50 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0" class="ring-track"></path>
+                                <path d="M50,50 m-45,0 a45,45 0 1,1 90,0 a45,45 0 1,1 -90,0" id="progressPath" class="ring-progress"></path>
                             </svg>
-                            <div class="ring-text">
-                                <span id="percent">0%</span>
-                                <small>Efficiency</small>
-                            </div>
+                            <div class="ring-val"><span id="percent">0%</span></div>
                         </div>
-
-                        <div class="stat-columns">
-                            <div class="stat-col">
-                                <span class="lbl">Total</span>
-                                <span class="val" id="dQty">0</span>
-                            </div>
-                            <div class="stat-col completed-text">
-                                <span class="lbl">Done</span>
-                                <span class="val" id="completed">0</span>
-                            </div>
-                            <div class="stat-col pending-text">
-                                <span class="lbl">Remaining</span>
-                                <span class="val" id="leftUnits">0</span>
-                            </div>
+                        <div class="data-grid">
+                            <div class="d-cell"><small>Total</small> <strong id="dQty">0</strong></div>
+                            <div class="d-cell highlight-green"><small>Done</small> <strong id="completed">0</strong></div>
+                            <div class="d-cell highlight-orange"><small>Left</small> <strong id="leftUnits">0</strong></div>
                         </div>
                     </div>
-
-                    <div class="production-input-row no-print">
-                        <input type="number" id="todayQty" placeholder="Enter Qty..." inputmode="numeric">
-                        <button class="btn-primary" onclick="addProduction()">Update</button>
+                    <div class="input-bar no-print">
+                        <input type="number" id="todayQty" placeholder="Add Qty..." inputmode="numeric">
+                        <button onclick="addProduction()"><i class="fas fa-plus"></i></button>
                     </div>
                 </div>
 
-                <div class="card target-card animate-up">
-                    <div class="target-icon">
-                        <i class="fas fa-crosshairs"></i>
-                    </div>
-                    <div class="target-info">
-                        <div class="t-label" id="targetLabel">DAILY TARGET</div>
-                        <div class="t-value">
-                            <span id="dailyTargetVal">0</span> <small>units/day</small>
+                <div class="card card-target animate-up">
+                    <div class="target-row">
+                        <div class="t-icon"><i class="fas fa-crosshairs"></i></div>
+                        <div class="t-data">
+                            <div class="t-head">
+                                <span id="targetLabel">TARGET</span>
+                                <span class="t-days" id="daysLeftVal">0 Days</span>
+                            </div>
+                            <div class="t-big">
+                                <span id="dailyTargetVal">0</span> <small>units/day</small>
+                            </div>
                         </div>
-                        <div class="t-sub" id="daysLeftVal">0 Days Remaining</div>
                     </div>
-                    <div class="time-progress-bar">
-                        <div id="timeBarFill"></div>
+                    <div class="t-bar-bg"><div id="timeBarFill" class="t-bar-fill"></div></div>
+                </div>
+
+                <div class="card card-sop animate-up">
+                    <div class="sop-head">
+                        <span>SOP CHECKLIST</span>
+                        <span class="sop-badge" id="sopCount">0/0</span>
+                    </div>
+                    <div class="sop-body" id="sopSteps"></div>
+                    <div class="sop-input no-print">
+                        <input type="text" id="newStepName" placeholder="+ Add Step">
+                        <button onclick="addNewStep()"><i class="fas fa-check"></i></button>
                     </div>
                 </div>
 
-                <div class="card sop-card animate-up">
-                    <div class="card-header-row">
-                        <div class="card-label">SOP CHECKLIST</div>
-                        <span class="count-badge" id="sopCount">0/0</span>
-                    </div>
-                    
-                    <div class="sop-list" id="sopSteps">
-                        </div>
-
-                    <div class="add-step-row no-print">
-                        <input type="text" id="newStepName" placeholder="Add task...">
-                        <button onclick="addNewStep()"><i class="fas fa-plus"></i></button>
-                    </div>
-                </div>
-
-                <div class="card image-card animate-up">
-                    <div class="card-label">REFERENCE PHOTO</div>
-                    <div class="img-wrapper">
+                <div class="card card-image animate-up">
+                    <div class="img-frame">
                         <img id="dImage" src="" onerror="this.style.display='none'">
-                        <div id="imgPlaceholder" class="placeholder-box">
-                            <i class="fas fa-image"></i>
-                            <span>No Reference Image</span>
-                        </div>
+                        <div id="imgPlaceholder" class="img-null"><i class="fas fa-image"></i></div>
                     </div>
                 </div>
-
-                <div style="height: 80px;"></div>
 
             </div>
+            <div style="height: 70px;"></div>
         </main>
-
-        <button class="fab no-print" onclick="initNewProduct()">
-            <i class="fas fa-plus"></i>
-        </button>
     </div>
 
-    <div id="productForm" class="modal-overlay" style="display: none;">
-        <div class="modal-sheet animate-slide-up-modal">
-            <div class="modal-header">
-                <h2>Edit Order</h2>
-                <button class="text-btn" onclick="hideForm()">Done</button>
+    <a href="https://akshay863.github.io/plantable-sop/" target="_blank" class="float-btn sop-btn no-print">
+        <i class="fas fa-book"></i> <span>SOP</span>
+    </a>
+    <button class="float-btn add-btn no-print" onclick="initNewProduct()">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <div id="productForm" class="modal-wrap" style="display: none;">
+        <div class="modal-box animate-slide">
+            <div class="modal-top">
+                <h3>Edit Order</h3>
+                <button class="link-btn" onclick="hideForm()">Done</button>
             </div>
-            
-            <div class="modal-scroll">
+            <div class="modal-content">
                 <input type="hidden" id="editProductId">
                 
-                <div class="form-group">
+                <div class="field-group">
                     <label>Product Name</label>
-                    <input type="text" id="pName" placeholder="Product Name">
+                    <input type="text" id="pName">
+                </div>
+                
+                <div class="row-2">
+                    <div class="field-group"><label>Client</label><input type="text" id="pCompanyInput"></div>
+                    <div class="field-group"><label>Contact</label><input type="text" id="pCustomer"></div>
+                </div>
+                
+                <div class="row-2">
+                    <div class="field-group"><label>Salesperson</label><input type="text" id="pSalesperson"></div>
+                    <div class="field-group"><label>Designer</label><input type="text" id="pDesigner"></div>
+                </div>
+                
+                <div class="row-2">
+                    <div class="field-group"><label>Total Qty</label><input type="number" id="pQty"></div>
+                    <div class="field-group"><label>Deadline</label><input type="date" id="pDeadline"></div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Client</label>
-                        <input type="text" id="pCompanyInput">
-                    </div>
-                    <div class="form-group">
-                        <label>Customer</label>
-                        <input type="text" id="pCustomer">
-                    </div>
+                <div class="field-group">
+                    <label>Order Date (Start)</label>
+                    <input type="date" id="pOrderDate" style="background:#f0f7f0; border-color:#2F7D32;">
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Salesperson</label>
-                        <input type="text" id="pSalesperson">
-                    </div>
-                    <div class="form-group">
-                        <label>Designer</label>
-                        <input type="text" id="pDesigner">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Total Quantity</label>
-                    <input type="number" id="pQty" inputmode="numeric">
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Order Date</label>
-                        <input type="date" id="pOrderDate">
-                    </div>
-                    <div class="form-group">
-                        <label>Deadline</label>
-                        <input type="date" id="pDeadline">
-                    </div>
-                </div>
-
-                <div class="form-group">
+                <div class="field-group">
                     <label>Reference Photo</label>
-                    <div class="file-btn-wrapper">
-                        <button class="btn-outline" onclick="document.getElementById('imageInput').click()">
-                            <i class="fas fa-camera"></i> Upload Photo
-                        </button>
-                        <input type="file" id="imageInput" accept="image/*" onchange="loadImage(event)" style="display:none;">
-                    </div>
-                    <img id="preview" class="preview-thumb" style="display:none;">
+                    <button class="upload-btn" onclick="document.getElementById('imageInput').click()">
+                        <i class="fas fa-camera"></i> Upload
+                    </button>
+                    <input type="file" id="imageInput" accept="image/*" onchange="loadImage(event)" style="display:none;">
+                    <img id="preview" class="thumb-preview" style="display:none;">
                 </div>
                 
                 <div class="modal-actions">
-                    <button class="btn-danger-outline" onclick="deleteProductAction()">Delete Order</button>
-                    <button class="btn-primary-full" id="saveBtn" onclick="saveProductAction()">Save Changes</button>
+                    <button class="btn-del" onclick="deleteProductAction()">Delete</button>
+                    <button class="btn-save" id="saveBtn" onclick="saveProductAction()">Save</button>
                 </div>
-                <div style="height: 40px;"></div>
+                <div style="height: 20px;"></div>
             </div>
         </div>
     </div>
