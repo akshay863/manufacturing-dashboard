@@ -15,33 +15,32 @@ function getStatus(p) {
     const done = Number(p.completedQty) || 0;
     if (total > 0 && done >= total) return 'completed';
     if (!p.deadline) return 'active';
-    
-    // Date Logic
     const now = new Date(); now.setHours(0,0,0,0);
     const dLine = new Date(p.deadline); dLine.setHours(0,0,0,0);
     const diff = (dLine - now) / (1000 * 60 * 60 * 24);
-    
-    if (diff < 0) return 'pending'; // Overdue
-    if (diff <= 3) return 'urgent'; // < 3 Days
+    if (diff < 0) return 'pending';
+    if (diff <= 3) return 'urgent';
     return 'active';
 }
 
 function getStatusColor(status) {
-    if(status==='completed') return '#1976D2'; // Blue
-    if(status==='urgent') return '#F57C00'; // Orange
-    if(status==='pending') return '#D32F2F'; // Red
-    return '#2F7D32'; // Green
+    if(status==='completed') return '#1976D2';
+    if(status==='urgent') return '#F57C00';
+    if(status==='pending') return '#D32F2F';
+    return '#2F7D32';
 }
 
 async function loadData() {
+    const conn = document.getElementById("connectionDot");
     try {
         const res = await fetch(API_URL);
         products = await res.json();
         renderList();
         if (products.length > 0) openProduct(0); 
-        else document.getElementById("emptyState").style.display = "block";
+        else document.getElementById("emptyState").style.display = "flex";
+        conn.style.backgroundColor = "#00C853";
     } catch (e) {
-        document.getElementById("navDeadline").innerHTML = "<span>Offline mode</span>";
+        conn.style.backgroundColor = "red";
     }
 }
 
@@ -62,10 +61,10 @@ function renderList() {
         const color = getStatusColor(status);
         
         const li = document.createElement("li");
-        li.className = "order-item";
-        li.onclick = () => { openProduct(index); toggleSidebar(); };
+        li.className = `order-item ${currentProduct && currentProduct.id === p.id ? 'active' : ''}`;
+        li.onclick = () => { openProduct(index); if(window.innerWidth < 900) toggleSidebar(); };
         li.innerHTML = `
-            <div class="o-info">
+            <div class="oi-main">
                 <h4>${p.name}</h4>
                 <p>${p.company || 'Client'}</p>
             </div>
@@ -77,43 +76,34 @@ function renderList() {
 
 function openProduct(index) {
     currentProduct = products[index];
-    document.getElementById("dashboard").style.display = "block";
+    document.getElementById("dashboard").style.display = window.innerWidth >= 900 ? "grid" : "block"; 
     document.getElementById("emptyState").style.display = "none";
 
-    // Text Data
+    // Text Binding
     document.getElementById("dName").innerText = currentProduct.name;
-    document.getElementById("dCompany").innerText = currentProduct.company || "Direct Client";
+    document.getElementById("dCompany").innerText = currentProduct.company || "Client";
     document.getElementById("dCustomer").innerText = currentProduct.customer || "-";
-    document.getElementById("dDeadline").innerText = currentProduct.deadline ? new Date(currentProduct.deadline).toLocaleDateString() : "No Date";
+    document.getElementById("dSalesperson").innerText = currentProduct.salesperson || "-";
     
-    // Status Badge
+    // Dates formatting
+    const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-GB', {day:'numeric', month:'short'}) : "-";
+    document.getElementById("dDeadline").innerText = formatDate(currentProduct.deadline);
+    document.getElementById("dOrderDate").innerText = formatDate(currentProduct.orderDate);
+
     const status = getStatus(currentProduct);
     const badge = document.getElementById("dStatusBadge");
-    badge.innerText = status === 'pending' ? 'OVERDUE' : status.toUpperCase();
+    badge.innerText = status === 'pending' ? 'Overdue' : status;
     badge.style.color = getStatusColor(status);
-    badge.style.backgroundColor = getStatusColor(status) + '20'; // 20% opacity
+    badge.style.background = getStatusColor(status) + '20';
 
-    // Ticker Update
-    const tick = document.getElementById("navDeadline");
-    if(status === 'urgent') {
-        tick.style.background = "#F57C00";
-        tick.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span>High Priority Order</span>`;
-    } else if (status === 'pending') {
-        tick.style.background = "#D32F2F";
-        tick.innerHTML = `<i class="fas fa-exclamation-triangle"></i> <span>Order Overdue</span>`;
-    } else {
-        tick.style.background = "#263238";
-        tick.innerHTML = `<i class="fas fa-check-circle"></i> <span>Production Normal</span>`;
-    }
-
-    // Image
     const img = document.getElementById("dImage");
     const ph = document.getElementById("imgPlaceholder");
     if(currentProduct.imageURL) { img.src = currentProduct.imageURL; img.style.display="block"; ph.style.display="none"; }
-    else { img.style.display="none"; ph.style.display="block"; }
+    else { img.style.display="none"; ph.style.display="flex"; }
 
     updateStats(status);
     renderSOP();
+    renderList();
 }
 
 function updateStats(status) {
@@ -131,14 +121,12 @@ function updateStats(status) {
     document.getElementById("leftUnits").innerText = left;
     document.getElementById("percent").innerText = pct + "%";
 
-    // SVG Ring
     const circle = document.getElementById('progressPath');
     const offset = 283 - (pct / 100) * 283;
     circle.style.strokeDashoffset = offset;
     circle.style.stroke = getStatusColor(status);
 
-    // Target Logic
-    const tCard = document.querySelector('.target-card');
+    const tCard = document.querySelector('.card-target');
     const tLabel = document.getElementById("targetLabel");
     const tVal = document.getElementById("dailyTargetVal");
     const tDays = document.getElementById("daysLeftVal");
@@ -146,26 +134,18 @@ function updateStats(status) {
     tCard.style.background = getStatusColor(status);
     
     if (status === 'completed') {
-        tLabel.innerText = "ORDER STATUS";
-        tVal.innerHTML = "DONE";
-        tDays.innerText = "Production Complete";
+        tLabel.innerText = "STATUS"; tVal.innerHTML = "DONE"; tDays.innerText = "Finished";
     } else if (status === 'pending') {
-        tLabel.innerText = "BACKLOG";
-        tVal.innerHTML = left;
-        tDays.innerText = "Schedule Overrun";
+        tLabel.innerText = "BACKLOG"; tVal.innerHTML = left; tDays.innerText = "Overdue";
     } else {
         const now = new Date();
         const dLine = new Date(currentProduct.deadline);
         const days = Math.ceil((dLine - now)/(86400000));
         
         if (days > 0) {
-            tLabel.innerText = "DAILY TARGET";
-            tVal.innerHTML = Math.ceil(left/days);
-            tDays.innerText = `${days} Days Remaining`;
+            tLabel.innerText = "TARGET"; tVal.innerHTML = Math.ceil(left/days); tDays.innerText = `${days} Days`;
         } else {
-            tLabel.innerText = "DUE TODAY";
-            tVal.innerHTML = left;
-            tDays.innerText = "Final Day";
+            tLabel.innerText = "DUE"; tVal.innerHTML = left; tDays.innerText = "Today";
         }
     }
 }
@@ -180,22 +160,21 @@ function renderSOP() {
         const div = document.createElement("div");
         div.className = `sop-item ${step.done ? 'done' : ''}`;
         div.innerHTML = `
-            <div class="sop-left">
+            <div style="display:flex; align-items:center; gap:8px;">
                 <input type="checkbox" ${step.done ? "checked" : ""} onchange="toggleStep(${i})">
                 <span>${step.name}</span>
             </div>
-            <i class="fas fa-trash" style="color:#BDBDBD" onclick="removeStep(${i})"></i>
+            <i class="fas fa-trash" style="color:#ccc; cursor:pointer;" onclick="removeStep(${i})"></i>
         `;
         list.appendChild(div);
     });
 }
 
-// Actions
+// Logic Actions
 async function saveProductAction() {
     const btn = document.getElementById("saveBtn");
     btn.innerText = "Saving...";
     const id = document.getElementById("editProductId").value;
-    
     const payload = {
         action: id ? "edit" : "add",
         id: id || null,
@@ -205,13 +184,13 @@ async function saveProductAction() {
         salesperson: document.getElementById("pSalesperson").value,
         designer: document.getElementById("pDesigner").value,
         qty: Number(document.getElementById("pQty").value) || 0,
+        // Save Order Date explicitly
         orderDate: document.getElementById("pOrderDate").value,
         deadline: document.getElementById("pDeadline").value,
         image: imageTemp || (id && currentProduct ? currentProduct.imageURL : ""),
         steps: (id && currentProduct) ? currentProduct.stepsJSON : [],
         completedQty: (id && currentProduct) ? currentProduct.completedQty : 0
     };
-
     await fetch(API_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
     setTimeout(() => location.reload(), 1500);
 }
@@ -262,7 +241,7 @@ async function deleteProductAction() {
     }
 }
 
-// Helper
+// Helpers
 function setFilter(f, btn) { currentFilter = f; document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')); btn.classList.add('active'); renderList(); }
 function showForm() { document.getElementById("productForm").style.display = "flex"; }
 function hideForm() { document.getElementById("productForm").style.display = "none"; }
